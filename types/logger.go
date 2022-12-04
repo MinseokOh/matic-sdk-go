@@ -4,22 +4,33 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	PanicLevel log.Level = iota
+	FatalLevel
+	ErrorLevel
+	WarnLevel
+	InfoLevel
+	DebugLevel
+	TraceLevel
+)
+
 type Logger struct {
 	enable bool
 	log    *log.Entry
 }
 
 func init() {
-	log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.DebugLevel)
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp: false,
 		ForceColors:   true,
 	})
 }
 
-func NewLogger(prefix string, enable bool) *Logger {
+func NewLogger(prefix string, config DebugConfig) *Logger {
+	log.SetLevel(config.Level)
 	return &Logger{
-		enable: enable,
+		enable: config.Enable,
 		log: log.WithFields(log.Fields{
 			"@client": prefix,
 		}),

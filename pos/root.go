@@ -29,8 +29,8 @@ func NewRootClient(config types.POSClientConfig) (*RootClient, error) {
 	}
 	root.Client = ethclient.NewClient(root.rpc)
 
-	root.Logger().Debug("NewChildClient", log.Fields{
-		"rpc" : root.config.Rpc,
+	root.Logger().Debug("NewRootClient", log.Fields{
+		"rpc": root.config.Rpc,
 	})
 
 	return &root, nil

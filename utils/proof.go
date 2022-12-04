@@ -54,7 +54,7 @@ func getFastMerkleProof(client types.IClient, txBlockNumber, startBlock, endBloc
 
 	merkleTreeDepth := int64(math.Ceil(math.Log2(float64(end - start - 1))))
 
-	reversedProof := make([]common.Hash, 0)
+	proof := make([]common.Hash, 0)
 
 	offset := start
 	targetIndex := blockNumber - offset
@@ -73,7 +73,7 @@ func getFastMerkleProof(client types.IClient, txBlockNumber, startBlock, endBloc
 				return nil, err
 			}
 
-			reversedProof = append(reversedProof, subTreeMerkleRoot)
+			proof = append(proof, subTreeMerkleRoot)
 			leftBound = newLeftBound
 		} else {
 			newRightBound := int64(math.Min(float64(rightBound), float64(pivotLeaf)))
@@ -81,7 +81,7 @@ func getFastMerkleProof(client types.IClient, txBlockNumber, startBlock, endBloc
 			expectedHeight := merkleTreeDepth - (depth + 1)
 			if rightBound <= pivotLeaf {
 				subTreeMerkleRoot := recursiveZeroHash(expectedHeight)
-				reversedProof = append(reversedProof, subTreeMerkleRoot)
+				proof = append(proof, subTreeMerkleRoot)
 			} else {
 				subTreeHeight := int64(math.Ceil(math.Log2(float64(rightBound - pivotLeaf))))
 
@@ -106,14 +106,22 @@ func getFastMerkleProof(client types.IClient, txBlockNumber, startBlock, endBloc
 				}
 
 				subTreeMerkleRoot := merkleTree.GetRoot()
-				reversedProof = append(reversedProof, subTreeMerkleRoot)
+				proof = append(proof, subTreeMerkleRoot)
 			}
 
 			rightBound = newRightBound
 		}
 	}
 
-	return reversedProof, nil
+	return reverseProof(proof), nil
+}
+
+func reverseProof(proofs []common.Hash) []common.Hash{
+	reversed := make([]common.Hash, 0)
+	for i := len(proofs)-1; i >=0; i-- {
+		reversed = append(reversed, proofs[i])
+	}
+	return reversed
 }
 
 func queryRootHash(ctx context.Context, client types.IClient, startBlock, endBlock int64) (common.Hash, error) {
