@@ -1,12 +1,18 @@
 ## Matic SDK for Go
 
-**Warnings**: Initial development is in progress, but there has not yet been a stable.
+> **Warning**
+>
+> Initial development is in progress, but there has not yet been a stable.
+
 
 This repository contains the matic go client library. converted [maticjs](https://github.com/maticnetwork/matic.js) in go and compatible [go-ethereum](https://github.com/ethereum/go-ethereum)
 
 This library will help developers to move assets from Ethereum chain to Matic chain, and withdraw from Matic to Ethereum using fraud proofs.
 
-**Note**: Requires Go [1.19+](https://go.dev/dl/)
+
+> **Note**
+>
+> Requires Go [1.19+](https://go.dev/dl/)
 
 
 ---
@@ -58,6 +64,10 @@ fmt.Println(hash)
 
 2. Call exit function on **RootChainManager** to submit proof of burn transaction. This call can be made ***after checkpoint*** is submitted for the block containing burn transaction.
 
+> **Note**
+>
+> The Withdraw transaction must be checkpointed in order to exit the withdraw.
+
 ```go
 // token address can be null for native tokens like ethereum or matic
 hash, err := posClient.ERC20(common.Address{}, types.Root).Exit(context.Background(), burnTxHash, privateKey)
@@ -108,6 +118,12 @@ fmt.Println(hash)
 ```
 
 2. Call the `exit()` function on ***RootChainManager*** to submit proof of burn transaction. This call can be made after the checkpoint is submitted for the block containing the burn transaction.
+
+
+> **Note**
+>
+> The Withdraw transaction must be checkpointed in order to exit the withdraw.
+
 
 ```go
 hash, err := posClient.ERC20(rootTokenAddress, types.Root).Exit(context.Background(), burnTxHash, privateKey)
@@ -166,6 +182,6 @@ if err != nil {
 
 err = posClient.Root.SendTransaction(ctx, tx)
 if err != nil {
-    return common.Hash{}, err
+    // handle error
 }
 ```
