@@ -52,7 +52,7 @@ func (client *Client) ERC20(address common.Address, networkType types.NetworkTyp
 
 func (client *Client) DepositEtherFor(ctx context.Context, amount *big.Int, privateKey *ecdsa.PrivateKey) (common.Hash, error) {
 	client.Logger().Debug("DepositEtherFor", log.Fields{
-		"amount":   amount,
+		"amount": amount,
 	})
 	rootClient := client.Root
 
@@ -98,7 +98,7 @@ func (client *Client) DepositEtherFor(ctx context.Context, amount *big.Int, priv
 	}
 
 	client.Logger().Info("DepositEtherFor", log.Fields{
-		"txHash":   tx.Hash(),
+		"txHash": tx.Hash(),
 	})
 	return tx.Hash(), nil
 }
@@ -177,8 +177,41 @@ func (client *Client) BuildPayloadForExit(ctx context.Context, txHash common.Has
 	}
 
 	client.logger.Info("ExitPayload", log.Fields{
-		"payload" : hexutil.Encode(payload),
+		"payload": hexutil.Encode(payload),
 	})
 
 	return payload, nil
+}
+
+func (client *Client) IsCheckPointed(ctx context.Context, txHash common.Hash) (bool, error) {
+	client.Logger().Debug("IsCheckPointed", log.Fields{
+		"txHash": txHash.String(),
+	})
+
+	lastChildBlock, err := client.Root.GetLastChildBlock()
+	if err != nil {
+		return false, err
+	}
+
+	client.Logger().Debug("TransactionReceipt", log.Fields{
+		"txHash": txHash.String(),
+	})
+	receipt, err := client.Child.TransactionReceipt(ctx, txHash)
+	if err != nil {
+		return false, err
+	}
+
+	if lastChildBlock.Cmp(receipt.BlockNumber) == 1 {
+		client.Logger().Debug("IsCheckPointed", log.Fields{
+			"checkPointed": true,
+			"txHash":       txHash.String(),
+		})
+		return true, nil
+	} else {
+		client.Logger().Debug("IsCheckPointed", log.Fields{
+			"checkPointed": false,
+			"txHash":       txHash.String(),
+		})
+		return false, nil
+	}
 }

@@ -224,6 +224,16 @@ func (erc20 *ERC20) Exit(ctx context.Context, txHash common.Hash, privateKey *ec
 	if err := erc20.checkForRoot("Exit"); err != nil {
 		return common.Hash{}, err
 	}
+
+	checkPointed, err := erc20.client.IsCheckPointed(ctx, txHash)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	if !checkPointed {
+		return common.Hash{}, fmt.Errorf("not checkpointed tx: %s", txHash.String())
+	}
+
 	rootClient := erc20.getClient()
 
 	address := crypto.PubkeyToAddress(*privateKey.Public().(*ecdsa.PublicKey))

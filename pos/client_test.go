@@ -34,3 +34,12 @@ func TestClient_DepositEtherFor(t *testing.T) {
 	assert.NoError(t, err)
 	t.Log("txHash", hash.String())
 }
+
+func TestClient_IsCheckPointed(t *testing.T) {
+	client, err := NewClient(types.NewDefaultConfig(types.TestNet))
+	assert.NoError(t, err)
+
+	checkPointed, err := client.IsCheckPointed(context.Background(), common.HexToHash("0xc55da852f91aad02018e92870cc440928c7ef4693e3fc5dcf8b31df58ae97f94"))
+	assert.NoError(t, err)
+	assert.Equal(t, checkPointed, true)
+}

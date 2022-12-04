@@ -55,6 +55,9 @@ func (root *RootClient) GetRootBlockInfo(txBlockNumber *big.Int) (types.RootBloc
 		"headerBlocks",
 		rootBlockNumber,
 	)
+	if err != nil {
+		return types.RootBlockInfo{}, err
+	}
 
 	headerBlock := types.RootBlockInfo{
 		HeaderBlockNumber: rootBlockNumber,
@@ -69,4 +72,23 @@ func (root *RootClient) GetRootBlockInfo(txBlockNumber *big.Int) (types.RootBloc
 	)
 
 	return headerBlock, nil
+}
+
+func (root *RootClient) GetLastChildBlock() (*big.Int, error) {
+	root.Logger().Debug("GetLastChildBlock", nil)
+
+	getLastChildBlockResp, err := utils.CallContract(root, root.config.RootChain, maticabi.RootChain,
+		"getLastChildBlock",
+	)
+	if err != nil {
+		return nil, err
+	}
+	lastChildBlock := getLastChildBlockResp[0].(*big.Int)
+
+	root.Logger().Debug("GetLastChildBlock",
+		log.Fields{
+			"blockNumber": lastChildBlock,
+		},
+	)
+	return lastChildBlock, nil
 }

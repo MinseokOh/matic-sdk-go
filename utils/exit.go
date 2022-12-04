@@ -61,3 +61,4 @@ func FindRootBlockFromChild(client types.IClient, childBlockNumber *big.Int, roo
 
 	return new(big.Int).Mul(ans, checkPointInterval), nil
 }
+
