@@ -190,15 +190,20 @@ func (erc20 *ERC20) Withdraw(ctx context.Context, amount *big.Int, privateKey *e
 		return common.Hash{}, err
 	}
 
+	value := big.NewInt(0)
+	if erc20.address == common.HexToAddress(types.MaticAddress) {
+		value = amount
+	}
+
 	signer := ether.NewLondonSigner(chainId)
 	tx, err := ether.SignNewTx(privateKey, signer, &ether.DynamicFeeTx{
 		ChainID:   chainId,
 		GasTipCap: gasTipCap,
 		GasFeeCap: gasTipCap,
-		Gas:       4e4,
+		Gas:       7e4,
 		Nonce:     nonce,
 		To:        &erc20.address,
-		Value:     big.NewInt(0),
+		Value:     value,
 		Data:      data,
 	})
 	if err != nil {

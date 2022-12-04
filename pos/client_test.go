@@ -30,7 +30,7 @@ func TestClient_DepositEtherFor(t *testing.T) {
 	client, err := NewClient(types.NewDefaultConfig(types.TestNet))
 	assert.NoError(t, err)
 
-	hash, err := client.DepositEtherFor(context.Background(), big.NewInt(10000), privateKey)
+	hash, err := client.DepositEtherFor(context.Background(), big.NewInt(123456789), privateKey)
 	assert.NoError(t, err)
 	t.Log("txHash", hash.String())
 }
