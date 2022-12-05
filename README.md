@@ -26,7 +26,7 @@ import (
     "github.com/MinseokOh/matic-sdk-go/types"
 )
 
-posClient, err := NewClient(types.NewDefaultConfig(types.TestNet))
+posClient, err := pos.NewClient(types.NewDefaultConfig(types.TestNet))
 if err != nil {
 	panic(err)
 }

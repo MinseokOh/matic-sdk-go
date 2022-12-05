@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"github.com/MinseokOh/matic-sdk-go/types"
 	maticabi "github.com/MinseokOh/matic-sdk-go/types/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -13,8 +14,8 @@ var (
 	checkPointInterval = big.NewInt(10000)
 )
 
-func FindRootBlockFromChild(client types.IClient, childBlockNumber *big.Int, rootChain common.Address) (*big.Int, error) {
-	currentHeaderBlockResp, err := CallContract(client, rootChain, maticabi.RootChain,
+func FindRootBlockFromChild(ctx context.Context, client types.IClient, childBlockNumber *big.Int, rootChain common.Address) (*big.Int, error) {
+	currentHeaderBlockResp, err := CallContract(ctx, client, rootChain, maticabi.RootChain,
 		"currentHeaderBlock",
 	)
 	if err != nil {
@@ -32,7 +33,7 @@ func FindRootBlockFromChild(client types.IClient, childBlockNumber *big.Int, roo
 	for start.Cmp(end) != 0 {
 		mid := new(big.Int).Div(new(big.Int).Add(start, end), bigTwo)
 
-		headerBlocksResp, err := CallContract(client, rootChain, maticabi.RootChain,
+		headerBlocksResp, err := CallContract(ctx, client, rootChain, maticabi.RootChain,
 			"headerBlocks",
 			new(big.Int).Mul(mid, checkPointInterval),
 		)
@@ -61,4 +62,3 @@ func FindRootBlockFromChild(client types.IClient, childBlockNumber *big.Int, roo
 
 	return new(big.Int).Mul(ans, checkPointInterval), nil
 }
-

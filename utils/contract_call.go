@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func CallContract(client types.IClient, to common.Address, abi abi.ABI, method string, args ...interface{}) ([]interface{}, error) {
+func CallContract(ctx context.Context, client types.IClient, to common.Address, abi abi.ABI, method string, args ...interface{}) ([]interface{}, error) {
 	client.Logger().Debug("CallContract", log.Fields{
 		"method": method,
 		"args":   args,
@@ -32,10 +32,20 @@ func CallContract(client types.IClient, to common.Address, abi abi.ABI, method s
 		Data: data,
 	}
 
-	b, err := client.CallContract(context.Background(), callMsg, nil)
+	b, err := client.CallContract(ctx, callMsg, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return m.Outputs.UnpackValues(b)
+	unpacked, err := m.Outputs.UnpackValues(b)
+	if err != nil {
+		return nil, err
+	}
+
+	client.Logger().Debug("CallContract", log.Fields{
+		"method":   method,
+		"unpacked": unpacked,
+	})
+
+	return unpacked, nil
 }

@@ -88,6 +88,75 @@ func (erc20 *ERC20) Approve(ctx context.Context, amount *big.Int, privateKey *ec
 	return tx.Hash(), nil
 }
 
+func (erc20 *ERC20) ApproveMax(ctx context.Context, privateKey *ecdsa.PrivateKey) (common.Hash, error) {
+	erc20.Logger().Debug("ApproveMax", log.Fields{
+		"contract": erc20.address.String(),
+	})
+	rootClient := erc20.client.Root
+
+	amount, _ := new(big.Int).SetString("115792089237316195423570985008687907853269984665640564039457584007913129639935", 10)
+
+	address := crypto.PubkeyToAddress(*privateKey.Public().(*ecdsa.PublicKey))
+	chainId, err := rootClient.ChainID(ctx)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	nonce, err := rootClient.PendingNonceAt(ctx, address)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	gasTipCap, err := rootClient.SuggestGasTipCap(ctx)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	data, err := maticabi.ERC20.Pack("approve", erc20.config.Root.ERC20Predicate, amount)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	signer := ether.NewLondonSigner(chainId)
+	tx, err := ether.SignNewTx(privateKey, signer, &ether.DynamicFeeTx{
+		ChainID:   chainId,
+		GasTipCap: gasTipCap,
+		GasFeeCap: gasTipCap,
+		Gas:       6e4,
+		Nonce:     nonce,
+		To:        &erc20.address,
+		Value:     big.NewInt(0),
+		Data:      data,
+	})
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	err = rootClient.SendTransaction(ctx, tx)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	erc20.Logger().Info("ApproveMax", log.Fields{
+		"txHash": tx.Hash(),
+	})
+	return tx.Hash(), nil
+}
+
+func (erc20 *ERC20) Allowance(ctx context.Context, owner, spender common.Address) (*big.Int, error) {
+	balanceOfResp, err := utils.CallContract(ctx, erc20.getClient(), erc20.address, maticabi.ERC20, "allowance", owner, spender)
+	if err != nil {
+		return nil, err
+	}
+	allowance := balanceOfResp[0].(*big.Int)
+
+	erc20.Logger().Info("Allowance", log.Fields{
+		"allowance": allowance,
+	})
+
+	return allowance, nil
+}
+
 func (erc20 *ERC20) DepositFor(ctx context.Context, amount *big.Int, privateKey *ecdsa.PrivateKey) (common.Hash, error) {
 	erc20.Logger().Debug("DepositFor", log.Fields{
 		"amount":   amount,
@@ -295,7 +364,7 @@ func (erc20 *ERC20) Exit(ctx context.Context, txHash common.Hash, privateKey *ec
 }
 
 func (erc20 *ERC20) BalanceOf(ctx context.Context, address common.Address) (*big.Int, error) {
-	balanceOfResp, err := utils.CallContract(erc20.getClient(), erc20.address, maticabi.ERC20, "balanceOf", address)
+	balanceOfResp, err := utils.CallContract(ctx, erc20.getClient(), erc20.address, maticabi.ERC20, "balanceOf", address)
 	if err != nil {
 		return nil, err
 	}

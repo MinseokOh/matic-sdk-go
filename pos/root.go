@@ -1,6 +1,7 @@
 package pos
 
 import (
+	"context"
 	"github.com/MinseokOh/matic-sdk-go/types"
 	maticabi "github.com/MinseokOh/matic-sdk-go/types/abi"
 	"github.com/MinseokOh/matic-sdk-go/utils"
@@ -46,12 +47,12 @@ func (root *RootClient) GetRootBlockInfo(txBlockNumber *big.Int) (types.RootBloc
 		},
 	)
 
-	rootBlockNumber, err := utils.FindRootBlockFromChild(root, txBlockNumber, root.config.RootChain)
+	rootBlockNumber, err := utils.FindRootBlockFromChild(context.Background(), root, txBlockNumber, root.config.RootChain)
 	if err != nil {
 		return types.RootBlockInfo{}, err
 	}
 
-	headerBlocksResp, err := utils.CallContract(root, root.config.RootChain, maticabi.RootChain,
+	headerBlocksResp, err := utils.CallContract(context.Background(), root, root.config.RootChain, maticabi.RootChain,
 		"headerBlocks",
 		rootBlockNumber,
 	)
@@ -77,7 +78,7 @@ func (root *RootClient) GetRootBlockInfo(txBlockNumber *big.Int) (types.RootBloc
 func (root *RootClient) GetLastChildBlock() (*big.Int, error) {
 	root.Logger().Debug("GetLastChildBlock", nil)
 
-	getLastChildBlockResp, err := utils.CallContract(root, root.config.RootChain, maticabi.RootChain,
+	getLastChildBlockResp, err := utils.CallContract(context.Background(), root, root.config.RootChain, maticabi.RootChain,
 		"getLastChildBlock",
 	)
 	if err != nil {
