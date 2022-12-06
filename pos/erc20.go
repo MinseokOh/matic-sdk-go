@@ -2,15 +2,12 @@ package pos
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"fmt"
 	"github.com/MinseokOh/matic-sdk-go/types"
 	maticabi "github.com/MinseokOh/matic-sdk-go/types/abi"
 	"github.com/MinseokOh/matic-sdk-go/utils"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	ether "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	log "github.com/sirupsen/logrus"
 	"math/big"
 )
@@ -34,50 +31,32 @@ func newERC20(client *Client, address common.Address, networkType types.NetworkT
 }
 func (erc20 *ERC20) Logger() *types.Logger { return erc20.logger }
 
-func (erc20 *ERC20) Approve(ctx context.Context, amount *big.Int, privateKey *ecdsa.PrivateKey) (common.Hash, error) {
+func (erc20 *ERC20) Approve(ctx context.Context, amount *big.Int, txOption *types.TxOption) (common.Hash, error) {
 	erc20.Logger().Debug("Approve", log.Fields{
 		"amount":   amount,
 		"contract": erc20.address.String(),
 	})
-	rootClient := erc20.client.Root
+	if txOption == nil {
+		return common.Hash{}, types.EmptyTxOption
+	}
 
-	address := crypto.PubkeyToAddress(*privateKey.Public().(*ecdsa.PublicKey))
-	chainId, err := rootClient.ChainID(ctx)
-	if err != nil {
+	if err := txOption.Validate(); err != nil {
 		return common.Hash{}, err
 	}
 
-	nonce, err := rootClient.PendingNonceAt(ctx, address)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	gasTipCap, err := rootClient.SuggestGasTipCap(ctx)
-	if err != nil {
-		return common.Hash{}, err
-	}
+	client := erc20.getClient()
 
 	data, err := maticabi.ERC20.Pack("approve", erc20.config.Root.ERC20Predicate, amount)
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	signer := ether.NewLondonSigner(chainId)
-	tx, err := ether.SignNewTx(privateKey, signer, &ether.DynamicFeeTx{
-		ChainID:   chainId,
-		GasTipCap: gasTipCap,
-		GasFeeCap: gasTipCap,
-		Gas:       6e4,
-		Nonce:     nonce,
-		To:        &erc20.address,
-		Value:     big.NewInt(0),
-		Data:      data,
-	})
+	tx, err := txOption.SetTxData(erc20.address, data, big.NewInt(0)).Build(ctx, client)
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	err = rootClient.SendTransaction(ctx, tx)
+	err = client.SendTransaction(ctx, tx)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -88,51 +67,33 @@ func (erc20 *ERC20) Approve(ctx context.Context, amount *big.Int, privateKey *ec
 	return tx.Hash(), nil
 }
 
-func (erc20 *ERC20) ApproveMax(ctx context.Context, privateKey *ecdsa.PrivateKey) (common.Hash, error) {
+func (erc20 *ERC20) ApproveMax(ctx context.Context, txOption *types.TxOption) (common.Hash, error) {
 	erc20.Logger().Debug("ApproveMax", log.Fields{
 		"contract": erc20.address.String(),
 	})
-	rootClient := erc20.client.Root
+
+	if txOption == nil {
+		return common.Hash{}, types.EmptyTxOption
+	}
+
+	if err := txOption.Validate(); err != nil {
+		return common.Hash{}, err
+	}
+
+	client := erc20.getClient()
 
 	amount, _ := new(big.Int).SetString("115792089237316195423570985008687907853269984665640564039457584007913129639935", 10)
-
-	address := crypto.PubkeyToAddress(*privateKey.Public().(*ecdsa.PublicKey))
-	chainId, err := rootClient.ChainID(ctx)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	nonce, err := rootClient.PendingNonceAt(ctx, address)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	gasTipCap, err := rootClient.SuggestGasTipCap(ctx)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
 	data, err := maticabi.ERC20.Pack("approve", erc20.config.Root.ERC20Predicate, amount)
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	signer := ether.NewLondonSigner(chainId)
-	tx, err := ether.SignNewTx(privateKey, signer, &ether.DynamicFeeTx{
-		ChainID:   chainId,
-		GasTipCap: gasTipCap,
-		GasFeeCap: gasTipCap,
-		Gas:       6e4,
-		Nonce:     nonce,
-		To:        &erc20.address,
-		Value:     big.NewInt(0),
-		Data:      data,
-	})
+	tx, err := txOption.SetTxData(erc20.address, data, big.NewInt(0)).Build(ctx, client)
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	err = rootClient.SendTransaction(ctx, tx)
+	err = client.SendTransaction(ctx, tx)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -157,7 +118,7 @@ func (erc20 *ERC20) Allowance(ctx context.Context, owner, spender common.Address
 	return allowance, nil
 }
 
-func (erc20 *ERC20) DepositFor(ctx context.Context, amount *big.Int, privateKey *ecdsa.PrivateKey) (common.Hash, error) {
+func (erc20 *ERC20) DepositFor(ctx context.Context, amount *big.Int, txOption *types.TxOption) (common.Hash, error) {
 	erc20.Logger().Debug("DepositFor", log.Fields{
 		"amount":   amount,
 		"contract": erc20.address.String(),
@@ -165,23 +126,16 @@ func (erc20 *ERC20) DepositFor(ctx context.Context, amount *big.Int, privateKey 
 	if err := erc20.checkForRoot("DepositFor"); err != nil {
 		return common.Hash{}, err
 	}
-	rootClient := erc20.getClient()
 
-	address := crypto.PubkeyToAddress(*privateKey.Public().(*ecdsa.PublicKey))
-	chainId, err := rootClient.ChainID(ctx)
-	if err != nil {
+	if txOption == nil {
+		return common.Hash{}, types.EmptyTxOption
+	}
+
+	if err := txOption.Validate(); err != nil {
 		return common.Hash{}, err
 	}
 
-	nonce, err := rootClient.PendingNonceAt(ctx, address)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	gasTipCap, err := rootClient.SuggestGasTipCap(ctx)
-	if err != nil {
-		return common.Hash{}, err
-	}
+	client := erc20.getClient()
 
 	uint256Ty, err := abi.NewType("uint256", "", nil)
 	if err != nil {
@@ -197,27 +151,17 @@ func (erc20 *ERC20) DepositFor(ctx context.Context, amount *big.Int, privateKey 
 		return common.Hash{}, err
 	}
 
-	data, err := maticabi.RootChainManager.Pack("depositFor", address, erc20.address, depositData)
+	data, err := maticabi.RootChainManager.Pack("depositFor", txOption.From(), erc20.address, depositData)
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	signer := ether.NewLondonSigner(chainId)
-	tx, err := ether.SignNewTx(privateKey, signer, &ether.DynamicFeeTx{
-		ChainID:   chainId,
-		GasTipCap: gasTipCap,
-		GasFeeCap: gasTipCap,
-		Gas:       11e4,
-		Nonce:     nonce,
-		To:        &erc20.config.Root.RootChainManager,
-		Value:     big.NewInt(0),
-		Data:      data,
-	})
+	tx, err := txOption.SetTxData(erc20.address, data, big.NewInt(0)).Build(ctx, client)
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	err = rootClient.SendTransaction(ctx, tx)
+	err = client.SendTransaction(ctx, tx)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -228,7 +172,7 @@ func (erc20 *ERC20) DepositFor(ctx context.Context, amount *big.Int, privateKey 
 	return tx.Hash(), nil
 }
 
-func (erc20 *ERC20) Withdraw(ctx context.Context, amount *big.Int, privateKey *ecdsa.PrivateKey) (common.Hash, error) {
+func (erc20 *ERC20) Withdraw(ctx context.Context, amount *big.Int, txOption *types.TxOption) (common.Hash, error) {
 	erc20.Logger().Debug("Withdraw", log.Fields{
 		"amount":   amount,
 		"contract": erc20.address.String(),
@@ -236,23 +180,16 @@ func (erc20 *ERC20) Withdraw(ctx context.Context, amount *big.Int, privateKey *e
 	if err := erc20.checkForChild("Withdraw"); err != nil {
 		return common.Hash{}, err
 	}
-	childClient := erc20.getClient()
 
-	address := crypto.PubkeyToAddress(*privateKey.Public().(*ecdsa.PublicKey))
-	chainId, err := childClient.ChainID(ctx)
-	if err != nil {
+	if txOption == nil {
+		return common.Hash{}, types.EmptyTxOption
+	}
+
+	if err := txOption.Validate(); err != nil {
 		return common.Hash{}, err
 	}
 
-	nonce, err := childClient.PendingNonceAt(ctx, address)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	gasTipCap, err := childClient.SuggestGasTipCap(ctx)
-	if err != nil {
-		return common.Hash{}, err
-	}
+	client := erc20.getClient()
 
 	data, err := maticabi.ERC20.Pack("withdraw", amount)
 	if err != nil {
@@ -264,22 +201,12 @@ func (erc20 *ERC20) Withdraw(ctx context.Context, amount *big.Int, privateKey *e
 		value = amount
 	}
 
-	signer := ether.NewLondonSigner(chainId)
-	tx, err := ether.SignNewTx(privateKey, signer, &ether.DynamicFeeTx{
-		ChainID:   chainId,
-		GasTipCap: gasTipCap,
-		GasFeeCap: gasTipCap,
-		Gas:       7e4,
-		Nonce:     nonce,
-		To:        &erc20.address,
-		Value:     value,
-		Data:      data,
-	})
+	tx, err := txOption.SetTxData(erc20.address, data, value).Build(ctx, client)
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	err = childClient.SendTransaction(ctx, tx)
+	err = client.SendTransaction(ctx, tx)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -290,7 +217,7 @@ func (erc20 *ERC20) Withdraw(ctx context.Context, amount *big.Int, privateKey *e
 	return tx.Hash(), nil
 }
 
-func (erc20 *ERC20) Exit(ctx context.Context, txHash common.Hash, privateKey *ecdsa.PrivateKey) (common.Hash, error) {
+func (erc20 *ERC20) Exit(ctx context.Context, txHash common.Hash, txOption *types.TxOption) (common.Hash, error) {
 	erc20.Logger().Debug("Exit", log.Fields{
 		"txHash":   txHash.String(),
 		"contract": erc20.address.String(),
@@ -308,23 +235,15 @@ func (erc20 *ERC20) Exit(ctx context.Context, txHash common.Hash, privateKey *ec
 		return common.Hash{}, fmt.Errorf("not checkpointed tx: %s", txHash.String())
 	}
 
-	rootClient := erc20.getClient()
+	if txOption == nil {
+		return common.Hash{}, types.EmptyTxOption
+	}
 
-	address := crypto.PubkeyToAddress(*privateKey.Public().(*ecdsa.PublicKey))
-	chainId, err := rootClient.ChainID(ctx)
-	if err != nil {
+	if err := txOption.Validate(); err != nil {
 		return common.Hash{}, err
 	}
 
-	nonce, err := rootClient.PendingNonceAt(ctx, address)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	gasTipCap, err := rootClient.SuggestGasTipCap(ctx)
-	if err != nil {
-		return common.Hash{}, err
-	}
+	client := erc20.getClient()
 
 	payload, err := erc20.client.BuildPayloadForExit(ctx, txHash, types.ERC20Transfer)
 	if err != nil {
@@ -336,22 +255,12 @@ func (erc20 *ERC20) Exit(ctx context.Context, txHash common.Hash, privateKey *ec
 		return common.Hash{}, err
 	}
 
-	signer := ether.NewLondonSigner(chainId)
-	tx, err := ether.SignNewTx(privateKey, signer, &ether.DynamicFeeTx{
-		ChainID:   chainId,
-		GasTipCap: gasTipCap,
-		GasFeeCap: gasTipCap,
-		Gas:       1e6,
-		Nonce:     nonce,
-		To:        &erc20.config.Root.RootChainManager,
-		Value:     big.NewInt(0),
-		Data:      data,
-	})
+	tx, err := txOption.SetTxData(erc20.address, data, big.NewInt(0)).Build(ctx, client)
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	err = rootClient.SendTransaction(ctx, tx)
+	err = client.SendTransaction(ctx, tx)
 	if err != nil {
 		return common.Hash{}, err
 	}

@@ -2,14 +2,11 @@ package pos
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"github.com/MinseokOh/matic-sdk-go/types"
 	maticabi "github.com/MinseokOh/matic-sdk-go/types/abi"
 	"github.com/MinseokOh/matic-sdk-go/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	ether "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/rlp"
 	log "github.com/sirupsen/logrus"
 	"math/big"
@@ -50,44 +47,27 @@ func (client *Client) ERC20(address common.Address, networkType types.NetworkTyp
 	return newERC20(client, address, networkType)
 }
 
-func (client *Client) DepositEtherFor(ctx context.Context, amount *big.Int, privateKey *ecdsa.PrivateKey) (common.Hash, error) {
+func (client *Client) DepositEtherFor(ctx context.Context, amount *big.Int, txOption *types.TxOption) (common.Hash, error) {
 	client.Logger().Debug("DepositEtherFor", log.Fields{
 		"amount": amount,
 	})
+
+	if txOption == nil {
+		return common.Hash{}, types.EmptyTxOption
+	}
+
+	if err := txOption.Validate(); err != nil {
+		return common.Hash{}, err
+	}
+
 	rootClient := client.Root
 
-	address := crypto.PubkeyToAddress(*privateKey.Public().(*ecdsa.PublicKey))
-	chainId, err := rootClient.ChainID(ctx)
+	data, err := maticabi.RootChainManager.Pack("depositEtherFor", txOption.From())
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	nonce, err := rootClient.PendingNonceAt(ctx, address)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	gasTipCap, err := rootClient.SuggestGasTipCap(ctx)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	data, err := maticabi.RootChainManager.Pack("depositEtherFor", address)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	signer := ether.NewLondonSigner(chainId)
-	tx, err := ether.SignNewTx(privateKey, signer, &ether.DynamicFeeTx{
-		ChainID:   chainId,
-		GasTipCap: gasTipCap,
-		GasFeeCap: gasTipCap,
-		Gas:       1e5,
-		Nonce:     nonce,
-		To:        &client.config.Root.RootChainManager,
-		Value:     amount,
-		Data:      data,
-	})
+	tx, err := txOption.SetTxData(client.config.Root.RootChainManager, data, amount).Build(ctx, rootClient)
 	if err != nil {
 		return common.Hash{}, err
 	}

@@ -25,7 +25,25 @@ func TestERC20_Approve(t *testing.T) {
 	assert.NoError(t, err)
 
 	erc20 := client.ERC20(RootDummyERC20, types.Root)
-	hash, err := erc20.Approve(context.Background(), big.NewInt(123456789), privateKey)
+	hash, err := erc20.Approve(context.Background(), big.NewInt(123456789), &types.TxOption{
+		PrivateKey: privateKey,
+	})
+	assert.NoError(t, err)
+	t.Log("txHash", hash.String())
+}
+
+func TestERC20_ApproveMax(t *testing.T) {
+	privateKey, err := crypto.HexToECDSA("1c28edecd1cdfbdb2e32c38d8e06ed042f3e31fb05d9884e5322376cce4706d4")
+	assert.NoError(t, err)
+
+	client, err := NewClient(types.NewDefaultConfig(types.TestNet))
+	assert.NoError(t, err)
+
+	erc20 := client.ERC20(RootDummyERC20, types.Root)
+	hash, err := erc20.ApproveMax(context.Background(), &types.TxOption{
+		PrivateKey: privateKey,
+		TxType:     types.DynamicFeeTxType,
+	})
 	assert.NoError(t, err)
 	t.Log("txHash", hash.String())
 }
@@ -38,7 +56,9 @@ func TestERC20_DepositFor(t *testing.T) {
 	assert.NoError(t, err)
 
 	erc20 := client.ERC20(RootDummyERC20, types.Root)
-	hash, err := erc20.DepositFor(context.Background(), big.NewInt(123456789), privateKey)
+	hash, err := erc20.DepositFor(context.Background(), big.NewInt(123456789), &types.TxOption{
+		PrivateKey: privateKey,
+	})
 	assert.NoError(t, err)
 	t.Log("txHash", hash.String())
 }
@@ -51,7 +71,9 @@ func TestERC20_Withdraw(t *testing.T) {
 	assert.NoError(t, err)
 
 	erc20 := client.ERC20(ChildDummyERC20, types.Child)
-	hash, err := erc20.Withdraw(context.Background(), big.NewInt(123456789), privateKey)
+	hash, err := erc20.Withdraw(context.Background(), big.NewInt(123456789), &types.TxOption{
+		PrivateKey: privateKey,
+	})
 	assert.NoError(t, err)
 	t.Log("txHash", hash.String())
 }
@@ -64,7 +86,9 @@ func TestERC20_WithdrawMatic(t *testing.T) {
 	assert.NoError(t, err)
 
 	erc20 := client.ERC20(Matic, types.Child)
-	hash, err := erc20.Withdraw(context.Background(), big.NewInt(123456789), privateKey)
+	hash, err := erc20.Withdraw(context.Background(), big.NewInt(123456789), &types.TxOption{
+		PrivateKey: privateKey,
+	})
 	assert.NoError(t, err)
 	t.Log("txHash", hash.String())
 }
@@ -77,7 +101,9 @@ func TestERC20_WithdrawEther(t *testing.T) {
 	assert.NoError(t, err)
 
 	erc20 := client.ERC20(ChildWETH, types.Child)
-	hash, err := erc20.Withdraw(context.Background(), big.NewInt(123456789), privateKey)
+	hash, err := erc20.Withdraw(context.Background(), big.NewInt(123456789), &types.TxOption{
+		PrivateKey: privateKey,
+	})
 	assert.NoError(t, err)
 	t.Log("txHash", hash.String())
 }
@@ -91,7 +117,9 @@ func TestERC20_Exit(t *testing.T) {
 	assert.NoError(t, err)
 
 	erc20 := client.ERC20(RootDummyERC20, types.Root)
-	hash, err := erc20.Exit(context.Background(), txHash, privateKey)
+	hash, err := erc20.Exit(context.Background(), txHash, &types.TxOption{
+		PrivateKey: privateKey,
+	})
 	assert.NoError(t, err)
 	t.Log("txHash", hash.String())
 }
@@ -105,7 +133,9 @@ func TestERC20_ExitEther(t *testing.T) {
 	assert.NoError(t, err)
 
 	erc20 := client.ERC20(RootDummyERC20, types.Root)
-	hash, err := erc20.Exit(context.Background(), txHash, privateKey)
+	hash, err := erc20.Exit(context.Background(), txHash, &types.TxOption{
+		PrivateKey: privateKey,
+	})
 	assert.NoError(t, err)
 	t.Log("txHash", hash.String())
 }

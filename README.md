@@ -43,7 +43,9 @@ if err != nil {
 - Make the depositEtherFor call on the RootChainManager and send the ether asset.
 
 ```go
-hash, err := posClient.DepositEtherFor(context.Background(), big.NewInt(10000), privateKey)
+hash, err := posClient.DepositEtherFor(context.Background(), big.NewInt(10000), &types.TxOption{
+	PrivateKey: privateKey
+})
 if err != nil {
     // handle error
 }
@@ -55,7 +57,9 @@ fmt.Println(hash)
 1. ***Burn*** tokens on Polygon chain.
 
 ```go
-hash, err := posClient.ERC20(WETHAddress, types.Child).Withdraw(context.Background(), big.NewInt(10000), privateKey)
+hash, err := posClient.ERC20(WETHAddress, types.Child).Withdraw(context.Background(), big.NewInt(10000), &types.TxOption{
+PrivateKey: privateKey
+})
 if err != nil {
 	// handle error
 }
@@ -70,7 +74,9 @@ fmt.Println(hash)
 
 ```go
 // token address can be null for native tokens like ethereum or matic
-hash, err := posClient.ERC20(common.Address{}, types.Root).Exit(context.Background(), burnTxHash, privateKey)
+hash, err := posClient.ERC20(common.Address{}, types.Root).Exit(context.Background(), burnTxHash, &types.TxOption{
+PrivateKey: privateKey
+})
 if err != nil {
 	// handle error
 }
@@ -88,7 +94,9 @@ fmt.Println(hash)
 1. ***Approve ERC20Predicate*** contract to spend the tokens that have to be deposited.
 
 ```go
-hash, err := posClient.ERC20(rootTokenAddress, types.Root).Approve(context.Background(), big.NewInt(10000), privateKey)
+hash, err := posClient.ERC20(rootTokenAddress, types.Root).Approve(context.Background(), big.NewInt(10000), &types.TxOption{
+PrivateKey: privateKey
+})
 if err != nil {
     // handle error
 }
@@ -98,7 +106,9 @@ fmt.Println(hash)
 2. Make ***depositFor*** call on ***RootChainManager***.
 
 ```go
-hash, err := posClient.ERC20(rootTokenAddress, types.Root).DepositFor(context.Background(), big.NewInt(10000), privateKey)
+hash, err := posClient.ERC20(rootTokenAddress, types.Root).DepositFor(context.Background(), big.NewInt(10000), &types.TxOption{
+PrivateKey: privateKey
+})
 if err != nil {
     // handle error
 }
@@ -110,7 +120,9 @@ fmt.Println(hash)
 1. ***Burn tokens*** on the Polygon chain.
 
 ```go
-hash, err := posClient.ERC20(childTokenAddress, types.Child).Withdraw(context.Background(), big.NewInt(10000), privateKey)
+hash, err := posClient.ERC20(childTokenAddress, types.Child).Withdraw(context.Background(), big.NewInt(10000), &types.TxOption{
+PrivateKey: privateKey
+})
 if err != nil {
     // handle error
 }
@@ -126,7 +138,9 @@ fmt.Println(hash)
 
 
 ```go
-hash, err := posClient.ERC20(rootTokenAddress, types.Root).Exit(context.Background(), burnTxHash, privateKey)
+hash, err := posClient.ERC20(rootTokenAddress, types.Root).Exit(context.Background(), burnTxHash, &types.TxOption{
+PrivateKey: privateKey
+})
 if err != nil {
 	// handle error
 }
