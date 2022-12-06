@@ -156,7 +156,7 @@ func (erc20 *ERC20) DepositFor(ctx context.Context, amount *big.Int, txOption *t
 		return common.Hash{}, err
 	}
 
-	tx, err := txOption.SetTxData(erc20.address, data, big.NewInt(0)).Build(ctx, client)
+	tx, err := txOption.SetTxData(erc20.config.Root.RootChainManager, data, big.NewInt(0)).Build(ctx, client)
 	if err != nil {
 		return common.Hash{}, err
 	}
