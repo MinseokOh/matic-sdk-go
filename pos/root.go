@@ -66,7 +66,7 @@ func (root *RootClient) GetRootBlockInfo(txBlockNumber *big.Int) (types.RootBloc
 		End:               headerBlocksResp[2].(*big.Int),
 	}
 
-	root.Logger().Info("RootBlockInfo",
+	root.Logger().Debug("RootBlockInfo",
 		log.Fields{
 			"headerBlock": headerBlock,
 		},

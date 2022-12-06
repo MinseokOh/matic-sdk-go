@@ -82,7 +82,7 @@ func (erc20 *ERC20) Approve(ctx context.Context, amount *big.Int, privateKey *ec
 		return common.Hash{}, err
 	}
 
-	erc20.Logger().Info("Approve", log.Fields{
+	erc20.Logger().Debug("Approve", log.Fields{
 		"txHash": tx.Hash(),
 	})
 	return tx.Hash(), nil
@@ -137,7 +137,7 @@ func (erc20 *ERC20) ApproveMax(ctx context.Context, privateKey *ecdsa.PrivateKey
 		return common.Hash{}, err
 	}
 
-	erc20.Logger().Info("ApproveMax", log.Fields{
+	erc20.Logger().Debug("ApproveMax", log.Fields{
 		"txHash": tx.Hash(),
 	})
 	return tx.Hash(), nil
@@ -150,7 +150,7 @@ func (erc20 *ERC20) Allowance(ctx context.Context, owner, spender common.Address
 	}
 	allowance := balanceOfResp[0].(*big.Int)
 
-	erc20.Logger().Info("Allowance", log.Fields{
+	erc20.Logger().Debug("Allowance", log.Fields{
 		"allowance": allowance,
 	})
 
@@ -222,7 +222,7 @@ func (erc20 *ERC20) DepositFor(ctx context.Context, amount *big.Int, privateKey 
 		return common.Hash{}, err
 	}
 
-	erc20.Logger().Info("DepositFor", log.Fields{
+	erc20.Logger().Debug("DepositFor", log.Fields{
 		"txHash": tx.Hash(),
 	})
 	return tx.Hash(), nil
@@ -284,7 +284,7 @@ func (erc20 *ERC20) Withdraw(ctx context.Context, amount *big.Int, privateKey *e
 		return common.Hash{}, err
 	}
 
-	erc20.Logger().Info("Withdraw", log.Fields{
+	erc20.Logger().Debug("Withdraw", log.Fields{
 		"txHash": tx.Hash(),
 	})
 	return tx.Hash(), nil
@@ -356,7 +356,7 @@ func (erc20 *ERC20) Exit(ctx context.Context, txHash common.Hash, privateKey *ec
 		return common.Hash{}, err
 	}
 
-	erc20.Logger().Info("Exit", log.Fields{
+	erc20.Logger().Debug("Exit", log.Fields{
 		"txHash": tx.Hash(),
 	})
 
@@ -370,7 +370,7 @@ func (erc20 *ERC20) BalanceOf(ctx context.Context, address common.Address) (*big
 	}
 	balance := balanceOfResp[0].(*big.Int)
 
-	erc20.Logger().Info("BalanceOf", log.Fields{
+	erc20.Logger().Debug("BalanceOf", log.Fields{
 		"balance": balance,
 	})
 

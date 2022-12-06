@@ -97,14 +97,14 @@ func (client *Client) DepositEtherFor(ctx context.Context, amount *big.Int, priv
 		return common.Hash{}, err
 	}
 
-	client.Logger().Info("DepositEtherFor", log.Fields{
+	client.Logger().Debug("DepositEtherFor", log.Fields{
 		"txHash": tx.Hash(),
 	})
 	return tx.Hash(), nil
 }
 
 func (client *Client) BuildPayloadForExit(ctx context.Context, txHash common.Hash, eventSignature string) ([]byte, error) {
-	client.Logger().Info("BuildPayloadForExit", log.Fields{
+	client.Logger().Debug("BuildPayloadForExit", log.Fields{
 		"txHash": txHash.String(),
 	})
 
@@ -131,13 +131,13 @@ func (client *Client) BuildPayloadForExit(ctx context.Context, txHash common.Has
 	}
 
 	client.Logger().Debug("BuildBlockProof", nil)
-	blockProof, err := utils.BuildBlockProof(client.Child, receipt.BlockNumber, blockInfo.Start, blockInfo.End)
+	blockProof, err := utils.BuildBlockProof(ctx, client.Child, receipt.BlockNumber, blockInfo.Start, blockInfo.End)
 	if err != nil {
 		return nil, err
 	}
 
 	client.Logger().Debug("GetReceiptProof", nil)
-	path, receiptProof, err := utils.GetReceiptProof(client.Child, receipt, block)
+	path, receiptProof, err := utils.GetReceiptProof(ctx, client.Child, receipt, block)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func (client *Client) BuildPayloadForExit(ctx context.Context, txHash common.Has
 		return nil, err
 	}
 
-	client.logger.Info("ExitPayload", log.Fields{
+	client.logger.Debug("ExitPayload", log.Fields{
 		"payload": hexutil.Encode(payload),
 	})
 

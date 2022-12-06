@@ -25,13 +25,13 @@ var (
 	}
 )
 
-func BuildBlockProof(client types.IClient, txBlockNumber, startBlock, endBlock *big.Int) ([]byte, error) {
+func BuildBlockProof(ctx context.Context, client types.IClient, txBlockNumber, startBlock, endBlock *big.Int) ([]byte, error) {
 	client.Logger().Debug("BuildBlockProof", log.Fields{
 		"txBlockNumber": txBlockNumber,
 		"start":         startBlock,
 		"end":           endBlock,
 	})
-	proof, err := getFastMerkleProof(client, txBlockNumber, startBlock, endBlock)
+	proof, err := getFastMerkleProof(ctx, client, txBlockNumber, startBlock, endBlock)
 	if err != nil {
 		return nil, err
 	}
@@ -41,13 +41,13 @@ func BuildBlockProof(client types.IClient, txBlockNumber, startBlock, endBlock *
 		buf = append(buf, proof[i].Bytes()...)
 	}
 
-	client.Logger().Info("BlockProof", log.Fields{
+	client.Logger().Debug("BlockProof", log.Fields{
 		"proof": hexutil.Encode(buf),
 	})
 	return buf, nil
 }
 
-func getFastMerkleProof(client types.IClient, txBlockNumber, startBlock, endBlock *big.Int) ([]common.Hash, error) {
+func getFastMerkleProof(ctx context.Context, client types.IClient, txBlockNumber, startBlock, endBlock *big.Int) ([]common.Hash, error) {
 	start := startBlock.Int64()
 	end := endBlock.Int64()
 	blockNumber := txBlockNumber.Int64()
@@ -68,7 +68,7 @@ func getFastMerkleProof(client types.IClient, txBlockNumber, startBlock, endBloc
 
 		if targetIndex > pivotLeaf {
 			newLeftBound := pivotLeaf + 1
-			subTreeMerkleRoot, err := queryRootHash(context.Background(), client, offset+leftBound, offset+pivotLeaf)
+			subTreeMerkleRoot, err := queryRootHash(ctx, client, offset+leftBound, offset+pivotLeaf)
 			if err != nil {
 				return nil, err
 			}
@@ -87,7 +87,7 @@ func getFastMerkleProof(client types.IClient, txBlockNumber, startBlock, endBloc
 
 				heightDifference := expectedHeight - subTreeHeight
 
-				remainingNodesHash, err := queryRootHash(context.Background(), client, offset+pivotLeaf+1, offset+rightBound)
+				remainingNodesHash, err := queryRootHash(ctx, client, offset+pivotLeaf+1, offset+rightBound)
 				if err != nil {
 					return nil, err
 				}
@@ -116,9 +116,9 @@ func getFastMerkleProof(client types.IClient, txBlockNumber, startBlock, endBloc
 	return reverseProof(proof), nil
 }
 
-func reverseProof(proofs []common.Hash) []common.Hash{
+func reverseProof(proofs []common.Hash) []common.Hash {
 	reversed := make([]common.Hash, 0)
-	for i := len(proofs)-1; i >=0; i-- {
+	for i := len(proofs) - 1; i >= 0; i-- {
 		reversed = append(reversed, proofs[i])
 	}
 	return reversed
@@ -153,14 +153,13 @@ func recursiveZeroHash(n int64) common.Hash {
 	return crypto.Keccak256Hash(b)
 }
 
-func GetReceiptProof(client types.IClient, txReceipt *ether.Receipt, block *ether.Block) ([]byte, []byte, error) {
+func GetReceiptProof(ctx context.Context, client types.IClient, txReceipt *ether.Receipt, block *ether.Block) ([]byte, []byte, error) {
 	client.Logger().Debug("GetReceiptProof", log.Fields{
 		"txReceipt": txReceipt.TxHash.String(),
 		"block":     block.NumberU64(),
 	})
 
 	stateSyncTxHash := getStateSyncTxHash(block)
-	receipts := make([]*ether.Receipt, 0)
 	receiptsTrie := trie.NewTrie()
 	for _, tx := range block.Transactions() {
 		if tx.Hash() == stateSyncTxHash {
@@ -171,19 +170,20 @@ func GetReceiptProof(client types.IClient, txReceipt *ether.Receipt, block *ethe
 			"txHash": tx.Hash().String(),
 		})
 
-		receipt, err := client.TransactionReceipt(context.Background(), tx.Hash())
+		receipt, err := client.TransactionReceipt(ctx, tx.Hash())
 		if err != nil {
 			continue
 		}
+
 		raw, err := receipt.MarshalBinary()
 		if err != nil {
 			return nil, nil, err
 		}
+
 		path, err := rlp.EncodeToBytes(receipt.TransactionIndex)
 		if err != nil {
 			return nil, nil, err
 		}
-		receipts = append(receipts, receipt)
 		receiptsTrie.Put(path, raw)
 	}
 
@@ -211,7 +211,7 @@ func GetReceiptProof(client types.IClient, txReceipt *ether.Receipt, block *ethe
 		return nil, nil, err
 	}
 
-	client.Logger().Info("ReceiptProof", log.Fields{
+	client.Logger().Debug("ReceiptProof", log.Fields{
 		"path":  hexutil.Encode(path),
 		"proof": hexutil.Encode(parentNodes),
 	})

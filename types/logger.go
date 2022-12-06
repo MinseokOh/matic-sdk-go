@@ -2,6 +2,7 @@ package types
 
 import (
 	log "github.com/sirupsen/logrus"
+	"os"
 )
 
 const (
@@ -20,6 +21,7 @@ type Logger struct {
 }
 
 func init() {
+	log.SetOutput(os.Stdout)
 	log.SetLevel(log.DebugLevel)
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp: false,

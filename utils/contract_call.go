@@ -12,8 +12,9 @@ import (
 
 func CallContract(ctx context.Context, client types.IClient, to common.Address, abi abi.ABI, method string, args ...interface{}) ([]interface{}, error) {
 	client.Logger().Debug("CallContract", log.Fields{
-		"method": method,
-		"args":   args,
+		"method":  method,
+		"args":    args,
+		"address": to,
 	})
 
 	m, ok := abi.Methods[method]
@@ -37,15 +38,15 @@ func CallContract(ctx context.Context, client types.IClient, to common.Address, 
 		return nil, err
 	}
 
-	unpacked, err := m.Outputs.UnpackValues(b)
+	values, err := m.Outputs.UnpackValues(b)
 	if err != nil {
 		return nil, err
 	}
 
 	client.Logger().Debug("CallContract", log.Fields{
 		"method":   method,
-		"unpacked": unpacked,
+		"response": values,
 	})
 
-	return unpacked, nil
+	return values, nil
 }
