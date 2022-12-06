@@ -255,7 +255,7 @@ func (erc20 *ERC20) Exit(ctx context.Context, txHash common.Hash, txOption *type
 		return common.Hash{}, err
 	}
 
-	tx, err := txOption.SetTxData(erc20.address, data, big.NewInt(0)).Build(ctx, client)
+	tx, err := txOption.SetTxData(erc20.config.Root.RootChainManager, data, big.NewInt(0)).Build(ctx, client)
 	if err != nil {
 		return common.Hash{}, err
 	}
