@@ -58,7 +58,7 @@ fmt.Println(hash)
 
 ```go
 hash, err := posClient.ERC20(WETHAddress, types.Child).Withdraw(context.Background(), big.NewInt(10000), &types.TxOption{
-PrivateKey: privateKey
+    PrivateKey: privateKey
 })
 if err != nil {
 	// handle error
@@ -75,7 +75,7 @@ fmt.Println(hash)
 ```go
 // token address can be null for native tokens like ethereum or matic
 hash, err := posClient.ERC20(common.Address{}, types.Root).Exit(context.Background(), burnTxHash, &types.TxOption{
-PrivateKey: privateKey
+    PrivateKey: privateKey
 })
 if err != nil {
 	// handle error
@@ -95,7 +95,7 @@ fmt.Println(hash)
 
 ```go
 hash, err := posClient.ERC20(rootTokenAddress, types.Root).Approve(context.Background(), big.NewInt(10000), &types.TxOption{
-PrivateKey: privateKey
+    PrivateKey: privateKey
 })
 if err != nil {
     // handle error
@@ -107,7 +107,7 @@ fmt.Println(hash)
 
 ```go
 hash, err := posClient.ERC20(rootTokenAddress, types.Root).DepositFor(context.Background(), big.NewInt(10000), &types.TxOption{
-PrivateKey: privateKey
+    PrivateKey: privateKey
 })
 if err != nil {
     // handle error
@@ -121,7 +121,7 @@ fmt.Println(hash)
 
 ```go
 hash, err := posClient.ERC20(childTokenAddress, types.Child).Withdraw(context.Background(), big.NewInt(10000), &types.TxOption{
-PrivateKey: privateKey
+    PrivateKey: privateKey
 })
 if err != nil {
     // handle error
@@ -139,7 +139,7 @@ fmt.Println(hash)
 
 ```go
 hash, err := posClient.ERC20(rootTokenAddress, types.Root).Exit(context.Background(), burnTxHash, &types.TxOption{
-PrivateKey: privateKey
+    PrivateKey: privateKey
 })
 if err != nil {
 	// handle error

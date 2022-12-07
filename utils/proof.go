@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/MinseokOh/matic-sdk-go/types"
-	"github.com/MinseokOh/merkle-patricia-tree/trie"
+	"github.com/MinseokOh/merkle-patricia-trie/trie"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"

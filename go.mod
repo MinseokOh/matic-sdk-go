@@ -3,7 +3,7 @@ module github.com/MinseokOh/matic-sdk-go
 go 1.19
 
 require (
-	github.com/MinseokOh/merkle-patricia-tree v0.0.1
+	github.com/MinseokOh/merkle-patricia-trie v0.0.2
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1

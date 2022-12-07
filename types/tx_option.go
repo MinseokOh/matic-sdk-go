@@ -28,12 +28,22 @@ type TxOption struct {
 	PrivateKey *ecdsa.PrivateKey
 
 	// Optional Parameters
-	TxType    int
-	GasLimit  uint64
-	GasPrice  *big.Int
+	TxType int
+
+	// GasLimit : gas limit for tx
+	GasLimit uint64
+
+	// GasPrice : gas price for LegacyTxType
+	GasPrice *big.Int
+
+	// GasTipCap : maxPriorityFeePerGas for DynamicFeeTxType
 	GasTipCap *big.Int
-	ChainId   *big.Int
-	Nonce     uint64
+
+	// GasFeeCap : maxFeePerGas for DynamicFeeTxType
+	GasFeeCap *big.Int
+
+	ChainId *big.Int
+	Nonce   uint64
 
 	data  []byte
 	value *big.Int
@@ -118,10 +128,15 @@ func (txOption *TxOption) Build(ctx context.Context, client IClient) (*ether.Tra
 			}
 		}
 
+		if txOption.GasFeeCap == nil {
+			txOption.GasFeeCap = txOption.GasTipCap
+		}
+
 		client.Logger().Debug("Sign Transaction", log.Fields{
 			"@type":     "DynamicFeeTxType",
 			"nonce":     txOption.Nonce,
 			"gasTipCap": txOption.GasTipCap,
+			"gasFeeCap": txOption.GasFeeCap,
 			"gas":       txOption.GasLimit,
 			"to":        txOption.to,
 			"value":     txOption.value,
@@ -131,7 +146,7 @@ func (txOption *TxOption) Build(ctx context.Context, client IClient) (*ether.Tra
 			ChainID:   txOption.ChainId,
 			Nonce:     txOption.Nonce,
 			GasTipCap: txOption.GasTipCap,
-			GasFeeCap: txOption.GasTipCap,
+			GasFeeCap: txOption.GasFeeCap,
 			Gas:       txOption.GasLimit,
 			To:        &txOption.to,
 			Value:     txOption.value,
