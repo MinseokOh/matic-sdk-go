@@ -11,6 +11,26 @@ import (
 	"testing"
 )
 
+var (
+	RootDummyERC20  = common.HexToAddress("0x655f2166b0709cd575202630952d71e2bb0d61af")
+	ChildDummyERC20 = common.HexToAddress("0xfe4f5145f6e09952a5ba9e956ed0c25e3fa4c7f1")
+
+	RootDummyERC721  = common.HexToAddress("0x16F7EF3774c59264C46E5063b1111bCFd6e7A72f")
+	ChildDummyERC721 = common.HexToAddress("0xbD88C3A7c0e242156a46Fbdf87141Aa6D0c0c649")
+
+	RootDummyERC1155  = common.HexToAddress("0x2e3Ef7931F2d0e4a7da3dea950FF3F19269d9063")
+	ChildDummyERC1155 = common.HexToAddress("0xA07e45A987F19E25176c877d98388878622623FA")
+
+	ChildWETH = common.HexToAddress("0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa")
+	Matic     = common.HexToAddress(types.MaticAddress)
+
+	TestPrivateKey, _ = crypto.HexToECDSA("1c28edecd1cdfbdb2e32c38d8e06ed042f3e31fb05d9884e5322376cce4706d4")
+	TestTxOption      = &types.TxOption{
+		PrivateKey: TestPrivateKey,
+		TxType:     types.DynamicFeeTxType,
+	}
+)
+
 func TestClient_BuildPayloadForExit(t *testing.T) {
 	client, err := NewClient(types.NewDefaultConfig(types.TestNet))
 	assert.NoError(t, err)
@@ -24,15 +44,10 @@ func TestClient_BuildPayloadForExit(t *testing.T) {
 }
 
 func TestClient_DepositEtherFor(t *testing.T) {
-	privateKey, err := crypto.HexToECDSA("1c28edecd1cdfbdb2e32c38d8e06ed042f3e31fb05d9884e5322376cce4706d4")
-	assert.NoError(t, err)
-
 	client, err := NewClient(types.NewDefaultConfig(types.TestNet))
 	assert.NoError(t, err)
 
-	hash, err := client.DepositEtherFor(context.Background(), big.NewInt(123456789), &types.TxOption{
-		PrivateKey: privateKey,
-	})
+	hash, err := client.DepositEtherFor(context.Background(), big.NewInt(123456789), TestTxOption)
 	assert.NoError(t, err)
 	t.Log("txHash", hash.String())
 }

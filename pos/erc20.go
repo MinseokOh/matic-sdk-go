@@ -22,19 +22,13 @@ func newERC20(client *Client, address common.Address, networkType types.NetworkT
 	}
 }
 
-func (erc20 *ERC20) Logger() *types.Logger { return erc20.logger }
-
 // Approve : approve to spender, when spender is zero address, approve to predicate address
 func (erc20 *ERC20) Approve(ctx context.Context, spender common.Address, amount *big.Int, txOption *types.TxOption) (common.Hash, error) {
 	erc20.Logger().Debug("Approve", log.Fields{
 		"amount":   amount,
 		"contract": erc20.address.String(),
 	})
-	if txOption == nil {
-		return common.Hash{}, types.EmptyTxOption
-	}
-
-	if err := txOption.Validate(); err != nil {
+	if err := types.ValidateTxOption(txOption); err != nil {
 		return common.Hash{}, err
 	}
 
@@ -54,12 +48,7 @@ func (erc20 *ERC20) ApproveMax(ctx context.Context, spender common.Address, txOp
 	erc20.Logger().Debug("ApproveMax", log.Fields{
 		"contract": erc20.address.String(),
 	})
-
-	if txOption == nil {
-		return common.Hash{}, types.EmptyTxOption
-	}
-
-	if err := txOption.Validate(); err != nil {
+	if err := types.ValidateTxOption(txOption); err != nil {
 		return common.Hash{}, err
 	}
 
@@ -98,11 +87,7 @@ func (erc20 *ERC20) Deposit(ctx context.Context, amount *big.Int, txOption *type
 		return common.Hash{}, err
 	}
 
-	if txOption == nil {
-		return common.Hash{}, types.EmptyTxOption
-	}
-
-	if err := txOption.Validate(); err != nil {
+	if err := types.ValidateTxOption(txOption); err != nil {
 		return common.Hash{}, err
 	}
 
@@ -152,11 +137,7 @@ func (erc20 *ERC20) Withdraw(ctx context.Context, amount *big.Int, txOption *typ
 		return common.Hash{}, err
 	}
 
-	if txOption == nil {
-		return common.Hash{}, types.EmptyTxOption
-	}
-
-	if err := txOption.Validate(); err != nil {
+	if err := types.ValidateTxOption(txOption); err != nil {
 		return common.Hash{}, err
 	}
 
@@ -204,11 +185,7 @@ func (erc20 *ERC20) Exit(ctx context.Context, txHash common.Hash, txOption *type
 		return common.Hash{}, fmt.Errorf("not checkpointed tx: %s", txHash.String())
 	}
 
-	if txOption == nil {
-		return common.Hash{}, types.EmptyTxOption
-	}
-
-	if err := txOption.Validate(); err != nil {
+	if err := types.ValidateTxOption(txOption); err != nil {
 		return common.Hash{}, err
 	}
 

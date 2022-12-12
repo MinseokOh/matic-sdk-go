@@ -14,7 +14,6 @@ import (
 )
 
 type Client struct {
-	ctx    context.Context
 	config types.POSClientConfig
 	logger *types.Logger
 	Child  *ChildClient
@@ -23,7 +22,6 @@ type Client struct {
 
 func NewClient(config types.POSClientConfig) (*Client, error) {
 	client := Client{
-		ctx:    context.Background(),
 		config: config,
 		logger: types.NewLogger("pos", config.Debug),
 	}

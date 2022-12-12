@@ -50,6 +50,18 @@ type TxOption struct {
 	to    common.Address
 }
 
+func ValidateTxOption(txOption *TxOption) error {
+	if txOption == nil {
+		return EmptyTxOption
+	}
+
+	if err := txOption.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (txOption *TxOption) Validate() error {
 	if txOption.PrivateKey == nil {
 		return EmptyPrivateKey

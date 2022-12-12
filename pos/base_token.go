@@ -66,7 +66,6 @@ func (token *BaseToken) deposit(ctx context.Context, depositData []byte, txOptio
 		return common.Hash{}, err
 	}
 
-	return tx.Hash(), nil
 	err = token.getClient().SendTransaction(ctx, tx)
 	if err != nil {
 		return common.Hash{}, err
