@@ -2,6 +2,7 @@ package pos
 
 import (
 	"context"
+	"fmt"
 	"github.com/MinseokOh/matic-sdk-go/types"
 	maticabi "github.com/MinseokOh/matic-sdk-go/types/abi"
 	"github.com/MinseokOh/matic-sdk-go/utils"
@@ -47,6 +48,10 @@ func (client *Client) ERC20(address common.Address, networkType types.NetworkTyp
 	return newERC20(client, address, networkType)
 }
 
+func (client *Client) ERC721(address common.Address, networkType types.NetworkType) *ERC721 {
+	return newERC721(client, address, networkType)
+}
+
 func (client *Client) DepositEtherFor(ctx context.Context, amount *big.Int, txOption *types.TxOption) (common.Hash, error) {
 	client.Logger().Debug("DepositEtherFor", log.Fields{
 		"amount": amount,
@@ -60,19 +65,17 @@ func (client *Client) DepositEtherFor(ctx context.Context, amount *big.Int, txOp
 		return common.Hash{}, err
 	}
 
-	rootClient := client.Root
-
 	data, err := maticabi.RootChainManager.Pack("depositEtherFor", txOption.From())
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	tx, err := txOption.SetTxData(client.config.Root.RootChainManager, data, amount).Build(ctx, rootClient)
+	tx, err := txOption.SetTxData(client.config.Root.RootChainManager, data, amount).Build(ctx, client.Root)
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	err = rootClient.SendTransaction(ctx, tx)
+	err = client.Root.SendTransaction(ctx, tx)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -83,7 +86,11 @@ func (client *Client) DepositEtherFor(ctx context.Context, amount *big.Int, txOp
 	return tx.Hash(), nil
 }
 
-func (client *Client) BuildPayloadForExit(ctx context.Context, txHash common.Hash, eventSignature string) ([]byte, error) {
+func (client *Client) ExitEther(ctx context.Context, txHash common.Hash, txOption *types.TxOption) (common.Hash, error) {
+	return client.ERC20(common.Address{}, types.Root).Exit(ctx, txHash, txOption)
+}
+
+func (client *Client) BuildPayloadForExit(ctx context.Context, txHash common.Hash, eventSignature string, index int) ([]byte, error) {
 	client.Logger().Debug("BuildPayloadForExit", log.Fields{
 		"txHash": txHash.String(),
 	})
@@ -122,12 +129,28 @@ func (client *Client) BuildPayloadForExit(ctx context.Context, txHash common.Has
 		return nil, err
 	}
 
-	client.Logger().Debug("GetLogIndex", nil)
-	index := utils.GetLogIndex(eventSignature, receipt)
-
 	rawReceipt, err := receipt.MarshalBinary()
 	if err != nil {
 		return nil, err
+	}
+
+	var logIndex uint64
+	if index > 0 {
+		// when token index is not 0
+		client.Logger().Debug("GetLogIndices", nil)
+		logIndices, err := utils.GetAllLogIndices(eventSignature, receipt)
+		if err != nil {
+			return nil, err
+		}
+
+		if index >= len(logIndices) {
+			return nil, fmt.Errorf("index is grater than the number of tokens in this transaction")
+		}
+		logIndex = logIndices[index]
+	} else {
+		// when token index is 0
+		client.Logger().Debug("GetLogIndex", nil)
+		logIndex = utils.GetLogIndex(eventSignature, receipt)
 	}
 
 	payload, err := rlp.EncodeToBytes([]interface{}{
@@ -150,7 +173,7 @@ func (client *Client) BuildPayloadForExit(ctx context.Context, txHash common.Has
 		// branchMask - 32 bits denoting the path of receipt in merkle patricia tree
 		append([]byte{0}, path...),
 		// receiptLogIndex - Log Index to read from the receipt
-		index,
+		logIndex,
 	})
 	if err != nil {
 		return nil, err
@@ -159,7 +182,6 @@ func (client *Client) BuildPayloadForExit(ctx context.Context, txHash common.Has
 	client.logger.Debug("ExitPayload", log.Fields{
 		"payload": hexutil.Encode(payload),
 	})
-
 	return payload, nil
 }
 
