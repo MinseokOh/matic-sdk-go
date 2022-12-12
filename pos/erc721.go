@@ -2,9 +2,9 @@ package pos
 
 import (
 	"context"
+	"fmt"
 	"github.com/MinseokOh/matic-sdk-go/types"
 	maticabi "github.com/MinseokOh/matic-sdk-go/types/abi"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	log "github.com/sirupsen/logrus"
 	"math/big"
@@ -64,26 +64,12 @@ func (erc721 *ERC721) Deposit(ctx context.Context, tokenId *big.Int, txOption *t
 		return common.Hash{}, err
 	}
 
-	uint256Ty, err := abi.NewType("uint256", "", nil)
+	depositData, err := maticabi.Deposit.Pack(tokenId)
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	deposit := abi.Arguments{
-		{Type: uint256Ty},
-	}
-
-	depositData, err := deposit.Pack(tokenId)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	data, err := maticabi.RootChainManager.Pack("depositFor", txOption.From(), erc721.address, depositData)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	txHash, err := erc721.deposit(ctx, data, txOption)
+	txHash, err := erc721.deposit(ctx, depositData, txOption)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -105,7 +91,28 @@ func (erc721 *ERC721) DepositMany(ctx context.Context, tokenIds []*big.Int, txOp
 		return common.Hash{}, err
 	}
 
-	return common.Hash{}, nil
+	if err := erc721.validateMany(tokenIds); err != nil {
+		return common.Hash{}, err
+	}
+
+	depositData, err := maticabi.DepositMany.Pack(tokenIds)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	txHash, err := erc721.deposit(ctx, depositData, txOption)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	return txHash, nil
+}
+
+func (erc721 *ERC721) validateMany(tokenIds []*big.Int) error {
+	if len(tokenIds) > 20 {
+		return fmt.Errorf("can not process more than 20 tokens")
+	}
+	return nil
 }
 
 func (erc721 *ERC721) IsApproved() {
@@ -130,7 +137,7 @@ func (erc721 *ERC721) Withdraw(ctx context.Context, txOption *types.TxOption) (c
 	return common.Hash{}, nil
 }
 
-func (erc721 *ERC721) WithdrawMany(ctx context.Context, txOption *types.TxOption) (common.Hash, error) {
+func (erc721 *ERC721) WithdrawMany(ctx context.Context, tokenIds []*big.Int, txOption *types.TxOption) (common.Hash, error) {
 	erc721.Logger().Debug("WithdrawMany", log.Fields{})
 
 	if err := erc721.checkForChild("WithdrawMany"); err != nil {
@@ -141,10 +148,14 @@ func (erc721 *ERC721) WithdrawMany(ctx context.Context, txOption *types.TxOption
 		return common.Hash{}, err
 	}
 
+	if err := erc721.validateMany(tokenIds); err != nil {
+		return common.Hash{}, err
+	}
+
 	return common.Hash{}, nil
 }
 
-func (erc721 *ERC721) Exit(ctx context.Context, txOption *types.TxOption) (common.Hash, error) {
+func (erc721 *ERC721) Exit(ctx context.Context, txHash common.Hash, txOption *types.TxOption) (common.Hash, error) {
 	erc721.Logger().Debug("Exit", log.Fields{})
 
 	if err := erc721.checkForChild("Exit"); err != nil {
@@ -158,7 +169,7 @@ func (erc721 *ERC721) Exit(ctx context.Context, txOption *types.TxOption) (commo
 	return common.Hash{}, nil
 }
 
-func (erc721 *ERC721) ExitMany(ctx context.Context, txOption *types.TxOption) (common.Hash, error) {
+func (erc721 *ERC721) ExitMany(ctx context.Context, txHash common.Hash, txOption *types.TxOption) (common.Hash, error) {
 	erc721.Logger().Debug("ExitMany", log.Fields{})
 
 	if err := erc721.checkForChild("ExitMany"); err != nil {

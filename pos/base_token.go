@@ -7,6 +7,7 @@ import (
 	maticabi "github.com/MinseokOh/matic-sdk-go/types/abi"
 	"github.com/MinseokOh/matic-sdk-go/utils"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	log "github.com/sirupsen/logrus"
 	"math/big"
 )
@@ -56,6 +57,12 @@ func (token *BaseToken) approve(ctx context.Context, spender common.Address, val
 }
 
 func (token *BaseToken) deposit(ctx context.Context, depositData []byte, txOption *types.TxOption) (common.Hash, error) {
+	token.logger.Debug("depositFor", log.Fields{
+		"from": txOption.From(),
+		"to":   token.address,
+		"data": hexutil.Encode(depositData),
+	})
+
 	data, err := maticabi.RootChainManager.Pack("depositFor", txOption.From(), token.address, depositData)
 	if err != nil {
 		return common.Hash{}, err
@@ -75,6 +82,9 @@ func (token *BaseToken) deposit(ctx context.Context, depositData []byte, txOptio
 }
 
 func (token *BaseToken) exit(ctx context.Context, payload []byte, txOption *types.TxOption) (common.Hash, error) {
+	token.logger.Debug("exit", log.Fields{
+		"payload": hexutil.Encode(payload),
+	})
 	data, err := maticabi.RootChainManager.Pack("exit", payload)
 	if err != nil {
 		return common.Hash{}, err

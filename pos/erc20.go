@@ -6,7 +6,6 @@ import (
 	"github.com/MinseokOh/matic-sdk-go/types"
 	maticabi "github.com/MinseokOh/matic-sdk-go/types/abi"
 	"github.com/MinseokOh/matic-sdk-go/utils"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	log "github.com/sirupsen/logrus"
 	"math/big"
@@ -91,18 +90,7 @@ func (erc20 *ERC20) Deposit(ctx context.Context, amount *big.Int, txOption *type
 		return common.Hash{}, err
 	}
 
-	client := erc20.getClient()
-
-	uint256Ty, err := abi.NewType("uint256", "", nil)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	deposit := abi.Arguments{
-		{Type: uint256Ty},
-	}
-
-	depositData, err := deposit.Pack(amount)
+	depositData, err := maticabi.Deposit.Pack(amount)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -112,12 +100,12 @@ func (erc20 *ERC20) Deposit(ctx context.Context, amount *big.Int, txOption *type
 		return common.Hash{}, err
 	}
 
-	tx, err := txOption.SetTxData(erc20.config.Root.RootChainManager, data, big.NewInt(0)).Build(ctx, client)
+	tx, err := txOption.SetTxData(erc20.config.Root.RootChainManager, data, big.NewInt(0)).Build(ctx, erc20.getClient())
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	err = client.SendTransaction(ctx, tx)
+	err = erc20.getClient().SendTransaction(ctx, tx)
 	if err != nil {
 		return common.Hash{}, err
 	}
