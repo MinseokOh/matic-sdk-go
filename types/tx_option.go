@@ -117,6 +117,7 @@ func (txOption *TxOption) Build(ctx context.Context, client IClient) (*ether.Tra
 
 		client.Logger().Debug("Sign Transaction", log.Fields{
 			"@type":    "LegacyTxType",
+			"signer":   txOption.From(),
 			"nonce":    txOption.Nonce,
 			"gasPrice": txOption.GasPrice,
 			"gas":      txOption.GasLimit,
@@ -146,6 +147,7 @@ func (txOption *TxOption) Build(ctx context.Context, client IClient) (*ether.Tra
 
 		client.Logger().Debug("Sign Transaction", log.Fields{
 			"@type":     "DynamicFeeTxType",
+			"signer":    txOption.From(),
 			"nonce":     txOption.Nonce,
 			"gasTipCap": txOption.GasTipCap,
 			"gasFeeCap": txOption.GasFeeCap,

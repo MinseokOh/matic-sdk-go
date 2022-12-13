@@ -16,31 +16,32 @@ type BaseToken struct {
 	client           *Client
 	config           types.POSClientConfig
 	networkType      types.NetworkType
+	tokenType        types.TokenType
 	logger           *types.Logger
 	address          common.Address
 	predicateAddress common.Address
 }
 
-func newBaseToken(client *Client, address common.Address, networkType types.NetworkType, tokenType string) *BaseToken {
+func newBaseToken(client *Client, address common.Address, networkType types.NetworkType, tokenType types.TokenType) *BaseToken {
 	return &BaseToken{
 		client:      client,
 		config:      client.config,
 		address:     address,
 		networkType: networkType,
-		logger:      types.NewLogger(tokenType, client.config.Debug),
+		logger:      types.NewLogger(tokenType.String(), client.config.Debug),
 	}
 }
 
 func (token *BaseToken) Logger() *types.Logger { return token.logger }
 
 func (token *BaseToken) approve(ctx context.Context, spender common.Address, value *big.Int, txOption *types.TxOption) (common.Hash, error) {
+	if spender == (common.Address{}) {
+		spender = token.PredicateAddress()
+	}
+
 	data, err := maticabi.ERC20.Pack("approve", spender, value)
 	if err != nil {
 		return common.Hash{}, err
-	}
-
-	if spender == (common.Address{}) {
-		spender = token.PredicateAddress()
 	}
 
 	tx, err := txOption.SetTxData(token.address, data, big.NewInt(0)).Build(ctx, token.getClient())
@@ -95,6 +96,7 @@ func (token *BaseToken) exit(ctx context.Context, payload []byte, txOption *type
 		return common.Hash{}, err
 	}
 
+	return tx.Hash(), nil
 	err = token.getClient().SendTransaction(ctx, tx)
 	if err != nil {
 		return common.Hash{}, err
@@ -104,6 +106,13 @@ func (token *BaseToken) exit(ctx context.Context, payload []byte, txOption *type
 }
 
 func (token *BaseToken) PredicateAddress() common.Address {
+	if err := token.checkForRoot("PredicateAddress"); err != nil {
+		token.Logger().Error("PredicateAddress", log.Fields{
+			"msg": err,
+		})
+		return common.Address{}
+	}
+
 	if token.predicateAddress != (common.Address{}) {
 		token.Logger().Debug("PredicateAddress", log.Fields{
 			"address": token.predicateAddress,

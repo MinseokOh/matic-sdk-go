@@ -92,14 +92,13 @@ func TestERC20_ExitEther(t *testing.T) {
 }
 
 func TestERC20_Balance(t *testing.T) {
-	address := common.HexToAddress("0x97524878fa80e4c335b64b8f07c888811d8a201e")
 	client, err := NewClient(types.NewDefaultConfig(types.TestNet))
 	assert.NoError(t, err)
 
-	rootBalance, err := client.ERC20(RootDummyERC20, types.Root).BalanceOf(context.Background(), address)
+	rootBalance, err := client.ERC20(RootDummyERC20, types.Root).BalanceOf(context.Background(), TestTxOption.From())
 	assert.NoError(t, err)
 
-	childBalance, err := client.ERC20(ChildWETH, types.Child).BalanceOf(context.Background(), address)
+	childBalance, err := client.ERC20(ChildWETH, types.Child).BalanceOf(context.Background(), TestTxOption.From())
 	assert.NoError(t, err)
 
 	t.Log(rootBalance, childBalance)

@@ -90,11 +90,11 @@ func (client *Client) ExitEther(ctx context.Context, txHash common.Hash, txOptio
 
 func (client *Client) BuildPayloadForExit(ctx context.Context, txHash common.Hash, eventSignature string, index int) ([]byte, error) {
 	client.Logger().Debug("BuildPayloadForExit", log.Fields{
-		"txHash": txHash.String(),
+		"txHash": txHash,
 	})
 
 	client.Logger().Debug("TransactionReceipt", log.Fields{
-		"txHash": txHash.String(),
+		"txHash": txHash,
 	})
 	receipt, err := client.Child.TransactionReceipt(ctx, txHash)
 	if err != nil {
@@ -185,16 +185,16 @@ func (client *Client) BuildPayloadForExit(ctx context.Context, txHash common.Has
 
 func (client *Client) IsCheckPointed(ctx context.Context, txHash common.Hash) (bool, error) {
 	client.Logger().Debug("IsCheckPointed", log.Fields{
-		"txHash": txHash.String(),
+		"txHash": txHash,
 	})
-
+	var err error
 	lastChildBlock, err := client.Root.GetLastChildBlock()
 	if err != nil {
 		return false, err
 	}
 
 	client.Logger().Debug("TransactionReceipt", log.Fields{
-		"txHash": txHash.String(),
+		"txHash": txHash,
 	})
 	receipt, err := client.Child.TransactionReceipt(ctx, txHash)
 	if err != nil {
@@ -204,13 +204,13 @@ func (client *Client) IsCheckPointed(ctx context.Context, txHash common.Hash) (b
 	if lastChildBlock.Cmp(receipt.BlockNumber) == 1 {
 		client.Logger().Debug("IsCheckPointed", log.Fields{
 			"checkPointed": true,
-			"txHash":       txHash.String(),
+			"txHash":       txHash,
 		})
 		return true, nil
 	} else {
 		client.Logger().Debug("IsCheckPointed", log.Fields{
 			"checkPointed": false,
-			"txHash":       txHash.String(),
+			"txHash":       txHash,
 		})
 		return false, nil
 	}

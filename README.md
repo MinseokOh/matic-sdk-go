@@ -43,7 +43,6 @@ childToken := posClient.ERC20(childTokenAddress, types.Root)
 
 ---
 
-
 ### Ether Deposit and Withdraw Guide
 
 #### Deposit ETH

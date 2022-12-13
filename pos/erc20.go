@@ -17,7 +17,7 @@ type ERC20 struct {
 
 func newERC20(client *Client, address common.Address, networkType types.NetworkType) *ERC20 {
 	return &ERC20{
-		BaseToken: newBaseToken(client, address, networkType, "erc20"),
+		BaseToken: newBaseToken(client, address, networkType, types.ERC20),
 	}
 }
 
