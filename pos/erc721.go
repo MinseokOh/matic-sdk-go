@@ -139,7 +139,7 @@ func (erc721 *ERC721) validateMany(tokenIds []*big.Int) error {
 func (erc721 *ERC721) IsApproved(ctx context.Context, tokenId *big.Int) (bool, error) {
 	erc721.Logger().Debug("IsApproved", log.Fields{
 		"tokenId":  tokenId,
-		"contract": erc721.address.String(),
+		"contract": erc721.address,
 	})
 
 	if err := erc721.checkForRoot("IsApproved"); err != nil {
@@ -164,7 +164,7 @@ func (erc721 *ERC721) IsApproved(ctx context.Context, tokenId *big.Int) (bool, e
 func (erc721 *ERC721) IsApprovedAll(ctx context.Context, address common.Address) (bool, error) {
 	erc721.Logger().Debug("IsApprovedAll", log.Fields{
 		"address":  address,
-		"contract": erc721.address.String(),
+		"contract": erc721.address,
 	})
 
 	if err := erc721.checkForRoot("IsApprovedAll"); err != nil {
@@ -184,7 +184,10 @@ func (erc721 *ERC721) IsApprovedAll(ctx context.Context, address common.Address)
 }
 
 func (erc721 *ERC721) Withdraw(ctx context.Context, tokenId *big.Int, txOption *types.TxOption) (common.Hash, error) {
-	erc721.Logger().Debug("Withdraw", log.Fields{})
+	erc721.Logger().Debug("Withdraw", log.Fields{
+		"tokenId":  tokenId,
+		"contract": erc721.address,
+	})
 
 	if err := erc721.checkForChild("Withdraw"); err != nil {
 		return common.Hash{}, err
@@ -204,7 +207,6 @@ func (erc721 *ERC721) Withdraw(ctx context.Context, tokenId *big.Int, txOption *
 		return common.Hash{}, err
 	}
 
-	return tx.Hash(), nil
 	err = erc721.getClient().SendTransaction(ctx, tx)
 	if err != nil {
 		return common.Hash{}, err
@@ -217,7 +219,10 @@ func (erc721 *ERC721) Withdraw(ctx context.Context, tokenId *big.Int, txOption *
 }
 
 func (erc721 *ERC721) WithdrawMany(ctx context.Context, tokenIds []*big.Int, txOption *types.TxOption) (common.Hash, error) {
-	erc721.Logger().Debug("WithdrawMany", log.Fields{})
+	erc721.Logger().Debug("WithdrawMany", log.Fields{
+		"tokenIds": tokenIds,
+		"contract": erc721.address,
+	})
 
 	if err := erc721.checkForChild("WithdrawMany"); err != nil {
 		return common.Hash{}, err
@@ -231,7 +236,25 @@ func (erc721 *ERC721) WithdrawMany(ctx context.Context, tokenIds []*big.Int, txO
 		return common.Hash{}, err
 	}
 
-	return common.Hash{}, nil
+	data, err := maticabi.ERC721.Pack("withdrawBatch", tokenIds)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	tx, err := txOption.SetTxData(erc721.address, data, big.NewInt(0)).Build(ctx, erc721.getClient())
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	err = erc721.getClient().SendTransaction(ctx, tx)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	erc721.Logger().Debug("Withdraw", log.Fields{
+		"txHash": tx.Hash(),
+	})
+	return tx.Hash(), nil
 }
 
 func (erc721 *ERC721) Exit(ctx context.Context, txHash common.Hash, txOption *types.TxOption) (common.Hash, error) {
@@ -278,9 +301,11 @@ func (erc721 *ERC721) Exit(ctx context.Context, txHash common.Hash, txOption *ty
 }
 
 func (erc721 *ERC721) ExitMany(ctx context.Context, txHash common.Hash, txOption *types.TxOption) (common.Hash, error) {
-	erc721.Logger().Debug("ExitMany", log.Fields{})
+	erc721.Logger().Debug("ExitMany", log.Fields{
+		"txHash": txHash,
+	})
 
-	if err := erc721.checkForChild("ExitMany"); err != nil {
+	if err := erc721.checkForRoot("ExitMany"); err != nil {
 		return common.Hash{}, err
 	}
 
@@ -288,5 +313,32 @@ func (erc721 *ERC721) ExitMany(ctx context.Context, txHash common.Hash, txOption
 		return common.Hash{}, err
 	}
 
-	return common.Hash{}, nil
+	checkPointed, err := erc721.client.IsCheckPointed(ctx, txHash)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	if !checkPointed {
+		return common.Hash{}, fmt.Errorf("not checkpointed tx: %s", txHash.String())
+	}
+
+	if err := types.ValidateTxOption(txOption); err != nil {
+		return common.Hash{}, err
+	}
+
+	payload, err := erc721.client.BuildPayloadForExit(ctx, txHash, types.ERC1155BatchTransfer, 0)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	hash, err := erc721.exit(ctx, payload, txOption)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	erc721.Logger().Debug("ExitMany", log.Fields{
+		"txHash": hash,
+	})
+
+	return hash, nil
 }

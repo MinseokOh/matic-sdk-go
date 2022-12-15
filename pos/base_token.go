@@ -95,8 +95,7 @@ func (token *BaseToken) exit(ctx context.Context, payload []byte, txOption *type
 	if err != nil {
 		return common.Hash{}, err
 	}
-
-	return tx.Hash(), nil
+	
 	err = token.getClient().SendTransaction(ctx, tx)
 	if err != nil {
 		return common.Hash{}, err
