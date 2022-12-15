@@ -30,11 +30,18 @@ posClient, err := pos.NewClient(types.NewDefaultConfig(types.TestNet))
 if err != nil {
 	panic(err)
 }
+
+
+// ether
+childWETH := posClient.ERC20(WETHAddress, types.Child)
+
+// erc20
+rootToken := posClient.ERC20(rootTokenAddress, types.Root)
+childToken := posClient.ERC20(childTokenAddress, types.Root)
 ```
 
 
 ---
-
 
 ### Ether Deposit and Withdraw Guide
 
@@ -43,13 +50,13 @@ if err != nil {
 - Make the depositEtherFor call on the RootChainManager and send the ether asset.
 
 ```go
-hash, err := posClient.DepositEtherFor(context.Background(), big.NewInt(10000), &types.TxOption{
+txHash, err := posClient.DepositEtherFor(context.Background(), big.NewInt(10000), &types.TxOption{
 	PrivateKey: privateKey
 })
 if err != nil {
     // handle error
 }
-fmt.Println(hash)
+fmt.Println(txHash)
 ```
 
 #### Withdraw ETH
@@ -57,13 +64,13 @@ fmt.Println(hash)
 1. ***Burn*** tokens on Polygon chain.
 
 ```go
-hash, err := posClient.ERC20(WETHAddress, types.Child).Withdraw(context.Background(), big.NewInt(10000), &types.TxOption{
+txHash, err := childWETH.Withdraw(context.Background(), big.NewInt(10000), &types.TxOption{
     PrivateKey: privateKey
 })
 if err != nil {
 	// handle error
 }
-fmt.Println(hash)
+fmt.Println(txHash)
 ```
 
 2. Call exit function on **RootChainManager** to submit proof of burn transaction. This call can be made ***after checkpoint*** is submitted for the block containing burn transaction.
@@ -73,14 +80,26 @@ fmt.Println(hash)
 > The Withdraw transaction must be checkpointed in order to exit the withdraw.
 
 ```go
-// token address can be null for native tokens like ethereum or matic
-hash, err := posClient.ERC20(common.Address{}, types.Root).Exit(context.Background(), burnTxHash, &types.TxOption{
+txHash, err := posClient.ExitEther(context.Background(), burnTxHash, &types.TxOption{
     PrivateKey: privateKey
 })
 if err != nil {
 	// handle error
 }
-fmt.Println(hash)
+fmt.Println(txHash)
+```
+
+or
+
+```go
+// token address can be null for native tokens like ethereum or matic
+txHash, err := posClient.ERC20(common.Address{}, types.Root).Exit(context.Background(), burnTxHash, &types.TxOption{
+    PrivateKey: privateKey
+})
+if err != nil {
+	// handle error
+}
+fmt.Println(txHash)
 ```
 
 
@@ -94,25 +113,26 @@ fmt.Println(hash)
 1. ***Approve ERC20Predicate*** contract to spend the tokens that have to be deposited.
 
 ```go
-hash, err := posClient.ERC20(rootTokenAddress, types.Root).Approve(context.Background(), big.NewInt(10000), &types.TxOption{
+// approve predicate address
+txHash, err := rootToken.Approve(context.Background(), common.Address{}, big.NewInt(10000), &types.TxOption{
     PrivateKey: privateKey
 })
 if err != nil {
     // handle error
 }
-fmt.Println(hash)
+fmt.Println(txHash)
 ```
 
 2. Make ***depositFor*** call on ***RootChainManager***.
 
 ```go
-hash, err := posClient.ERC20(rootTokenAddress, types.Root).DepositFor(context.Background(), big.NewInt(10000), &types.TxOption{
+txHash, err := rootToken.Deposit(context.Background(), big.NewInt(10000), &types.TxOption{
     PrivateKey: privateKey
 })
 if err != nil {
     // handle error
 }
-fmt.Println(hash)
+fmt.Println(txHash)
 ```
 
 #### Withdraw ERC20
@@ -120,13 +140,13 @@ fmt.Println(hash)
 1. ***Burn tokens*** on the Polygon chain.
 
 ```go
-hash, err := posClient.ERC20(childTokenAddress, types.Child).Withdraw(context.Background(), big.NewInt(10000), &types.TxOption{
+txHash, err := childToken.Withdraw(context.Background(), big.NewInt(10000), &types.TxOption{
     PrivateKey: privateKey
 })
 if err != nil {
     // handle error
 }
-fmt.Println(hash)
+fmt.Println(txHash)
 ```
 
 2. Call the `exit()` function on ***RootChainManager*** to submit proof of burn transaction. This call can be made after the checkpoint is submitted for the block containing the burn transaction.
@@ -138,13 +158,13 @@ fmt.Println(hash)
 
 
 ```go
-hash, err := posClient.ERC20(rootTokenAddress, types.Root).Exit(context.Background(), burnTxHash, &types.TxOption{
+txHash, err := rootToken.Exit(context.Background(), burnTxHash, &types.TxOption{
     PrivateKey: privateKey
 })
 if err != nil {
 	// handle error
 }
-fmt.Println(hash)
+fmt.Println(txHash)
 ```
 
 

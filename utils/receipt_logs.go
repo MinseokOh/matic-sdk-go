@@ -8,8 +8,8 @@ import (
 
 const emptyTopic = "0x0000000000000000000000000000000000000000000000000000000000000000"
 
-func GetAllLogIndices(logEventSig string, receipt *ether.Receipt) ([]int, error) {
-	var logIndices []int
+func GetAllLogIndices(logEventSig string, receipt *ether.Receipt) ([]uint64, error) {
+	var logIndices []uint64
 	for i, log := range receipt.Logs {
 		switch logEventSig {
 		case types.ERC20Transfer, types.ERC721TransferWithMetadata:
@@ -19,7 +19,7 @@ func GetAllLogIndices(logEventSig string, receipt *ether.Receipt) ([]int, error)
 
 			if strings.ToLower(log.Topics[0].String()) == strings.ToLower(logEventSig) &&
 				strings.ToLower(log.Topics[2].String()) == emptyTopic {
-				logIndices = append(logIndices, i)
+				logIndices = append(logIndices, uint64(i))
 			}
 		case types.ERC1155Transfer, types.ERC1155BatchTransfer:
 			if len(log.Topics) < 3 {
@@ -28,7 +28,7 @@ func GetAllLogIndices(logEventSig string, receipt *ether.Receipt) ([]int, error)
 
 			if strings.ToLower(log.Topics[0].String()) == strings.ToLower(logEventSig) &&
 				strings.ToLower(log.Topics[3].String()) == emptyTopic {
-				logIndices = append(logIndices, i)
+				logIndices = append(logIndices, uint64(i))
 			}
 		case types.ERC721BatchTransfer:
 			if len(log.Topics) < 2 {
@@ -37,7 +37,7 @@ func GetAllLogIndices(logEventSig string, receipt *ether.Receipt) ([]int, error)
 
 			if strings.ToLower(log.Topics[0].String()) == strings.ToLower(types.ERC721Transfer) &&
 				strings.ToLower(log.Topics[2].String()) == emptyTopic {
-				logIndices = append(logIndices, i)
+				logIndices = append(logIndices, uint64(i))
 			}
 		}
 	}

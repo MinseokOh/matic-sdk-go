@@ -33,7 +33,6 @@ type RootConfig struct {
 	Rpc              string
 	RootChain        common.Address
 	RootChainManager common.Address
-	ERC20Predicate   common.Address
 }
 
 type DebugConfig struct {
@@ -52,7 +51,6 @@ func NewDefaultConfig(network Network) POSClientConfig {
 				Rpc:              "https://rpc.ankr.com/eth",
 				RootChain:        common.HexToAddress("0x536c55cFe4892E581806e10b38dFE8083551bd03"),
 				RootChainManager: common.HexToAddress("0x37D26DC2890b35924b40574BAc10552794771997"),
-				ERC20Predicate:   common.HexToAddress("0x40ec5B33f54e0E8A33A975908C5BA1c14e5BbbDf"),
 			},
 			Debug: DebugConfig{
 				Enable: true,
@@ -68,7 +66,6 @@ func NewDefaultConfig(network Network) POSClientConfig {
 				Rpc:              "https://rpc.ankr.com/eth_goerli",
 				RootChain:        common.HexToAddress("0x2890bA17EfE978480615e330ecB65333b880928e"),
 				RootChainManager: common.HexToAddress("0xBbD7cBFA79faee899Eaf900F13C9065bF03B1A74"),
-				ERC20Predicate:   common.HexToAddress("0xdD6596F2029e6233DEFfaCa316e6A95217d4Dc34"),
 			},
 			Debug: DebugConfig{
 				Enable: true,
