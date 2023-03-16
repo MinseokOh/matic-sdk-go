@@ -40,19 +40,19 @@ func NewRootClient(config types.POSClientConfig) (*RootClient, error) {
 func (root *RootClient) Rpc() *rpc.Client      { return root.rpc }
 func (root *RootClient) Logger() *types.Logger { return root.logger }
 
-func (root *RootClient) GetRootBlockInfo(txBlockNumber *big.Int) (types.RootBlockInfo, error) {
+func (root *RootClient) GetRootBlockInfo(ctx context.Context, txBlockNumber *big.Int) (types.RootBlockInfo, error) {
 	root.Logger().Debug("GetRootBlockInfo",
 		log.Fields{
 			"txBlockNumber": txBlockNumber,
 		},
 	)
 
-	rootBlockNumber, err := utils.FindRootBlockFromChild(context.Background(), root, txBlockNumber, root.config.RootChain)
+	rootBlockNumber, err := utils.FindRootBlockFromChild(ctx, root, txBlockNumber, root.config.RootChain)
 	if err != nil {
 		return types.RootBlockInfo{}, err
 	}
 
-	headerBlocksResp, err := utils.CallContract(context.Background(), root, root.config.RootChain, maticabi.RootChain,
+	headerBlocksResp, err := utils.CallContract(ctx, root, root.config.RootChain, maticabi.RootChain,
 		"headerBlocks",
 		rootBlockNumber,
 	)
@@ -75,10 +75,10 @@ func (root *RootClient) GetRootBlockInfo(txBlockNumber *big.Int) (types.RootBloc
 	return headerBlock, nil
 }
 
-func (root *RootClient) GetLastChildBlock() (*big.Int, error) {
+func (root *RootClient) GetLastChildBlock(ctx context.Context) (*big.Int, error) {
 	root.Logger().Debug("GetLastChildBlock", nil)
 
-	getLastChildBlockResp, err := utils.CallContract(context.Background(), root, root.config.RootChain, maticabi.RootChain,
+	getLastChildBlockResp, err := utils.CallContract(ctx, root, root.config.RootChain, maticabi.RootChain,
 		"getLastChildBlock",
 	)
 	if err != nil {

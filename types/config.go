@@ -41,37 +41,13 @@ type DebugConfig struct {
 }
 
 func NewDefaultConfig(network Network) POSClientConfig {
-	switch network {
-	case MainNet:
-		return POSClientConfig{
-			Child: ChildConfig{
-				Rpc: "https://rpc.ankr.com/polygon",
-			},
-			Root: RootConfig{
-				Rpc:              "https://rpc.ankr.com/eth",
-				RootChain:        common.HexToAddress("0x536c55cFe4892E581806e10b38dFE8083551bd03"),
-				RootChainManager: common.HexToAddress("0x37D26DC2890b35924b40574BAc10552794771997"),
-			},
-			Debug: DebugConfig{
-				Enable: true,
-				Level:  DebugLevel,
-			},
-		}
-	case TestNet:
-		return POSClientConfig{
-			Child: ChildConfig{
-				Rpc: "https://rpc.ankr.com/polygon_mumbai",
-			},
-			Root: RootConfig{
-				Rpc:              "https://rpc.ankr.com/eth_goerli",
-				RootChain:        common.HexToAddress("0x2890bA17EfE978480615e330ecB65333b880928e"),
-				RootChainManager: common.HexToAddress("0xBbD7cBFA79faee899Eaf900F13C9065bF03B1A74"),
-			},
-			Debug: DebugConfig{
-				Enable: true,
-				Level:  DebugLevel,
-			},
-		}
+	contract := GetContractByNetwork(network)
+	return POSClientConfig{
+		Child: contract.ChildConfig("https://rpc.ankr.com/polygon"),
+		Root:  contract.RootConfig("https://rpc.ankr.com/eth"),
+		Debug: DebugConfig{
+			Enable: true,
+			Level:  DebugLevel,
+		},
 	}
-	return POSClientConfig{}
 }

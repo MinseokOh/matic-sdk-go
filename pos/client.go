@@ -110,7 +110,7 @@ func (client *Client) BuildPayloadForExit(ctx context.Context, txHash common.Has
 	}
 
 	client.Logger().Debug("GetRootBlockInfo", nil)
-	blockInfo, err := client.Root.GetRootBlockInfo(block.Number())
+	blockInfo, err := client.Root.GetRootBlockInfo(ctx, block.Number())
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +188,7 @@ func (client *Client) IsCheckPointed(ctx context.Context, txHash common.Hash) (b
 		"txHash": txHash,
 	})
 	var err error
-	lastChildBlock, err := client.Root.GetLastChildBlock()
+	lastChildBlock, err := client.Root.GetLastChildBlock(ctx)
 	if err != nil {
 		return false, err
 	}
