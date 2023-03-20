@@ -1,42 +1,13 @@
 package types
 
 import (
-	"encoding/json"
 	"github.com/ethereum/go-ethereum/common"
-	"net/http"
 )
 
 const MaticAddress = "0x0000000000000000000000000000000000001010"
 
 const TestNetContractURL = `https://static.matic.network/network/testnet/mumbai/index.json`
 const MainNetContractURL = `https://static.matic.network/network/mainnet/v1/index.json`
-
-func GetContractByNetwork(network Network) Contract {
-	var response *http.Response
-	var err error
-	switch network {
-	case TestNet:
-		response, err = http.Get(TestNetContractURL)
-	case MainNet:
-		response, err = http.Get(MainNetContractURL)
-	}
-	if err != nil {
-		return Contract{}
-	}
-	defer response.Body.Close()
-
-	var contract Contract
-	var b []byte
-	if _, err = response.Body.Read(b); err != nil {
-		return Contract{}
-	}
-
-	if err = json.Unmarshal(b, &contract); err != nil {
-		return Contract{}
-	}
-
-	return contract
-}
 
 type Contract struct {
 	Main struct {
@@ -75,7 +46,7 @@ type Contract struct {
 func (c Contract) RootConfig(rpc string) RootConfig {
 	return RootConfig{
 		Rpc:              rpc,
-		RootChain:        common.HexToAddress(c.Main.Contracts.RootChain),
+		RootChain:        common.HexToAddress("0x2890bA17EfE978480615e330ecB65333b880928e"),
 		RootChainManager: common.HexToAddress(c.Main.POSContracts.RootChainManager),
 	}
 }

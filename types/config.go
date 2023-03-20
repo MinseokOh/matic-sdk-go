@@ -39,15 +39,3 @@ type DebugConfig struct {
 	Enable bool
 	Level  log.Level
 }
-
-func NewDefaultConfig(network Network) POSClientConfig {
-	contract := GetContractByNetwork(network)
-	return POSClientConfig{
-		Child: contract.ChildConfig("https://rpc.ankr.com/polygon"),
-		Root:  contract.RootConfig("https://rpc.ankr.com/eth"),
-		Debug: DebugConfig{
-			Enable: true,
-			Level:  DebugLevel,
-		},
-	}
-}
