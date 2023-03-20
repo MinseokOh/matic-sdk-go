@@ -8,7 +8,7 @@ import (
 )
 
 func TestBaseToken_getPredicateAddress(t *testing.T) {
-	client, err := NewClient(types.NewDefaultConfig(types.TestNet))
+	client, err := NewClient(NewDefaultConfig(types.TestNet))
 	assert.NoError(t, err)
 
 	erc20Predicate := client.ERC20(RootDummyERC20, types.Root).PredicateAddress()

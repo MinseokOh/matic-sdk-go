@@ -20,6 +20,18 @@ type Client struct {
 	Root   *RootClient
 }
 
+func NewDefaultConfig(network types.Network) types.POSClientConfig {
+	contract := utils.GetContractByNetwork(network)
+	return types.POSClientConfig{
+		Child: contract.ChildConfig("https://rpc.ankr.com/polygon_mumbai"),
+		Root:  contract.RootConfig("https://rpc.ankr.com/eth_goerli"),
+		Debug: types.DebugConfig{
+			Enable: true,
+			Level:  types.DebugLevel,
+		},
+	}
+}
+
 func NewClient(config types.POSClientConfig) (*Client, error) {
 	client := Client{
 		config: config,
